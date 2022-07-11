@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 
 # file = open(argv[1], mode='r', encoding="utf-8-sig")
-file = open('mouse1_session1_001.annot' , mode='r', encoding="utf-8-sig")
+file = open('annot_files/mouse1_session1_001.annot' , mode='r', encoding="utf-8-sig")
 lines = file.readlines()
 file.close()
 

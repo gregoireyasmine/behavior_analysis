@@ -1,5 +1,7 @@
 from parsingannot import *
 import numpy as np
+import sys
+from os.path import expanduser
 
 
 def get_behavior_pie_chart(annot):
@@ -53,7 +55,7 @@ def total_time_variability_hist():
     behaviors = ['attack', 'close\nby', 'direct\ncompetition', 'foraging vs\nexploration',
                  'investigation', 'separate\nexploration', 'separate\nforaging', 'travel\naway', 'travel\ntowards']
     for i, n in enumerate('123456'):
-        file = open('mouse1_session1_00' + n + '.annot', mode='r', encoding="utf-8-sig")
+        file = open('annot_files/mouse1_session1_00' + n + '.annot', mode='r', encoding="utf-8-sig")
         lines = file.readlines()
         file.close()
         total_time[i] = np.array(get_behavior_pie_chart(lines)[1])
@@ -99,6 +101,17 @@ def get_distribution_over_time(behaviour, annot, timebin=300, binstart=0, binsto
     return np.histogram(start_times, bins=bins)
 
 
+def get_threshold_change_triggered_distribution(behaviour, annot, timebin=300, binstart=0, binstop=7200):
+    first_time_stamp = 3727241957.4
+    threshold_change_timestamp = 3727242919.38198    # for video 1 TODO: export from aeon
+    threshold_change_time = threshold_change_timestamp - first_time_stamp
+    behaviours = behavior_parser(annot)
+    fr = get_annot_framerate()
+    bins = np.arange(start=binstart-threshold_change_time, stop=binstop+threshold_change_time, step=timebin)
+    start_times = np.array(behaviours[behaviour]['start']) / fr
+    return np.histogram(start_times-threshold_change_time, bins=bins)
+
+
 def get_next_behaviors_prob(behaviour, timeline):
     other_behaviors = ['attack', 'close_by', 'direct_competition', 'foraging_vs_exploration',
                        'investigation', 'separate_exploration', 'separate_foraging', 'travel_away', 'travel_towards']
@@ -107,7 +120,7 @@ def get_next_behaviors_prob(behaviour, timeline):
     i = 0
     while i < np.shape(timeline)[0]:
         if timeline[i] == behaviour:
-            while i < np.shape(timeline)[0] and (timeline[i] == behaviour or timeline[i] == ''):
+            while i + 1 < np.shape(timeline)[0] and (timeline[i] == behaviour or timeline[i] == ''):
                 i += 1
             if timeline[i] != behaviour and timeline[i] != '':
                 next_behaviors_count[timeline[i]] += 1
@@ -136,14 +149,14 @@ def characterize_behavior(behavior):
 
     tmax = []
     for n in '12345':
-        file = open('mouse1_session1_00' + n + '.annot', mode='r', encoding="utf-8-sig")
+        file = open('annot_files/mouse1_session1_00' + n + '.annot', mode='r', encoding="utf-8-sig")
         lines = file.readlines()
         file.close()
         tmax.append(get_annot_end_time(lines))
     max_time = min(tmax)
     for n in '12345':
 
-        file = open('mouse1_session1_00' + n + '.annot', mode='r', encoding="utf-8-sig")
+        file = open('annot_files/mouse1_session1_00' + n + '.annot', mode='r', encoding="utf-8-sig")
         lines = file.readlines()
         file.close()
 
@@ -167,6 +180,23 @@ def characterize_behavior(behavior):
             't_distrib': (distribution_over_time, bins),
             'next_behaviour_prob': next_behaviors,
             'prev_behaviour_prob': previous_behaviors}
+
+
+def build_markov_chain_matrix_v0():
+    behaviors = ['attack', 'close_by', 'direct_competition', 'foraging_vs_exploration',
+                       'investigation', 'separate_exploration', 'separate_foraging', 'travel_away', 'travel_towards']
+    next_behaviour_probs = {behavior: characterize_behavior(behavior)['next_behaviour_prob'] for behavior in behaviors}
+    P = np.zeros([len(behaviors), len(behaviors)])
+    for i, behavior_1 in enumerate(behaviors):
+        for j, behavior_2 in enumerate(behaviors):
+            if i == j:
+                pass
+            else:
+                P[i, j] = next_behaviour_probs[behavior_1][behavior_2]
+    return P
+
+
+
 
 
 
