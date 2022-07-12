@@ -80,6 +80,7 @@ def plot_characterization(behavior):
     h, bins = characterization['t_distrib']
     ax['t_distrib'].bar(bins[:-1], h, width=bins[1]-bins[0])
     ax['t_distrib'].set_title(label='distribution of behavior over time')
+    ax['t_distrib'].plot([0, 0], [0, 1.2 * max(h)], color = 'red')
     _, _, autotexts = ax['next'].pie([characterization['next_behaviour_prob'][b] for b in other_behaviors],
                    autopct=lambda pct: label_values(pct),
                    shadow=True)
@@ -96,11 +97,6 @@ def plot_characterization(behavior):
     ax['prev'].set_title('previous behavior distribution')
     fig.suptitle(behavior + ' behavior characterization')
     fig.savefig(behavior + '_characterization')
-
-
-    plot_characterization('direct_competition')
-    plot_characterization('separate_foraging')
-
     plt.close()
 
 
@@ -129,5 +125,11 @@ def plot_markov_chain_v0():
     plt.savefig('markov_chain_v0')
 
 
-plot_markov_chain_v0()
+
+behaviors = ['attack', 'close_by', 'direct_competition', 'foraging_vs_exploration',
+             'investigation', 'separate_exploration', 'separate_foraging', 'travel_away', 'travel_towards']
+for behavior in behaviors:
+    plot_characterization(behavior)
+
+
 

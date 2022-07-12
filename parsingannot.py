@@ -1,6 +1,8 @@
 from sys import argv
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
+from os import listdir
 
 
 # file = open(argv[1], mode='r', encoding="utf-8-sig")
@@ -80,6 +82,57 @@ def behavior_parser(annot):
         else:
             l += 1
     return behaviors
+
+
+def get_sessid(annot):
+    file = get_movie_file(annot)
+    char = 0
+    while char < len(file) and file[char] != 'B':
+        char += 1
+    sessid = file[char:-6]
+    return sessid
+
+
+def get_threshold_change(sessid):
+    patch1 = pd.read_csv('sessionsdata/state1_' + sessid + '.csv')
+    patch2 = pd.read_csv('sessionsdata/state2_' + sessid + '.csv')
+    if len(patch2) > len(patch1):
+        patch = patch1
+        patchid = 1
+    else :
+        patch = patch2
+        patchid = 2
+    row = 0
+    initial_threshold = patch.iloc[0]['threshold']
+    while row < len(patch) and patch.iloc[row]['threshold'] == initial_threshold :
+        row += 1
+    if row < len(patch) :
+        return {'patchid': patchid,
+                'changetime': patch.iloc[row]['time_in_session'],
+                'init_threshold': initial_threshold,
+                'new_threshold': patch.iloc[row]['threshold'] }
+    else:
+        return None
+
+
+def get_positions(sessid):
+    datetime = pd.to_datetime(sessid.split('_')[1], utc=True)
+    pos_csv = []
+    for file in listdir('sessionsdata/'):
+        if file[:8] == 'FrameTop':
+            datetimef = pd.to_datetime(file.split('_')[1], utc=True)
+            if abs(datetimef - datetime) < pd.Timedelta(10, 'm'):
+                pos_csv.append(file)
+    if len(pos_csv) > 1:
+        raise Exception("too many position csv files found for sessid :", sessid, "files found: ", files)
+    elif len(pos_csv) == 0:
+        raise Exception("no csv file found for sessid:", sessid)
+    else :
+        file = pos_csv[0]
+        positions = pd.read_csv('sessionsdata/'+file)
+        positions.rename(columns = {'Unnamed: 0':'frame'}, inplace = True)
+        positions = positions.assign(Time=positions.frame/50)   #ajouter colonne timestamp
+        return positions
 
 
 

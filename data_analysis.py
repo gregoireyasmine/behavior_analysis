@@ -102,11 +102,11 @@ def get_distribution_over_time(behaviour, annot, timebin=300, binstart=0, binsto
 
 
 def get_threshold_change_triggered_distribution(behaviour, annot, timebin=300, binstart=0, binstop=7200):
-    first_time_stamp = 3727241957.4
-    threshold_change_timestamp = 3727242919.38198    # for video 1 TODO: export from aeon
-    threshold_change_time = threshold_change_timestamp - first_time_stamp
+    sessid = get_sessid(annot)
+    threshold_change = get_threshold_change(sessid)
+    threshold_change_time = threshold_change['changetime']
     behaviours = behavior_parser(annot)
-    fr = get_annot_framerate()
+    fr = get_annot_framerate(annot)
     bins = np.arange(start=binstart-threshold_change_time, stop=binstop+threshold_change_time, step=timebin)
     start_times = np.array(behaviours[behaviour]['start']) / fr
     return np.histogram(start_times-threshold_change_time, bins=bins)
@@ -166,7 +166,7 @@ def characterize_behavior(behavior):
 
         frequency.append(get_total_occurences(behavior, lines)/time[-1])
 
-        distrib_over_time, bins = get_distribution_over_time(behavior, lines, binstop=5400)
+        distrib_over_time, bins = get_threshold_change_triggered_distribution(behavior, lines, binstop=5400)
         distribution_over_time.append(distrib_over_time)
 
         next_behaviors_prob = get_next_behaviors_prob(behavior, timeline)
