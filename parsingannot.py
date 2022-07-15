@@ -131,42 +131,56 @@ def get_positions(sessid):
         file = pos_csv[0]
         datetimef = pd.to_datetime(file.split('_')[1], utc=True)
         positions = pd.read_csv('sessionsdata/'+file)
-        offset = (datetimef - datetime).total_secondes()
+        offset = (datetimef - datetime).total_seconds()
         positions.rename(columns = {'Unnamed: 0':'frame'}, inplace = True)
         positions = positions.assign(Time=positions.frame/50 + offset)   #timestamp
         return positions
 
 
 def discriminate_behaviours(behaviors, sessid):
-    individuals_behaviors = {'ind1': {behavior: {} for behavior in behaviors.keys()},
-                             'ind2': {behavior: {} for behavior in behaviors.keys()}}
-    name_mapping = {0 : 'ind1', 1: 'ind2'}
     positions = get_positions(sessid)
     behavior_fr = 30
     for behavior in behaviors:
-        if (behavior == 'attack' or behavior == 'investigation' or behaviour == 'separate_exploration'
-                or behaviour == 'separate_foraging'):
-            individuals_behaviors['ind1'][behavior] = behaviors[behavior]
-        elif (behavior == 'travel_towards' or behavior == 'travel_away' or behavior == 'direct_competition'
-            or behavior == 'close_by' or behavior == 'foraging_vs_exploration'):
+        if behavior in ['travel_towards', 'travel_away', 'direct_competition', 'close_by', 'foraging_vs_exploration']:
+
+            behaviors[behavior]['individual_close_from_patch'] = []
+            behaviors[behavior]['patch_of_interest'] = []
+
             for i, start in enumerate(behaviors[behavior]['start']):
-                start = start/behavior_fr
-                end = behaviors[behavior]['end'][i]/behavior_fr
-                pos = positions.iloc[list(start <= positions.Time <= end)]
-                ind1_dist_to_patches = [(pos.ind1_nose_x.mean() - pos.single_right_wheel_x.mean()) ** 2
-                + (pos.ind1_nose_y.mean() - pos.single_right_wheel_y.mean()) ** 2 ,
-                                         (pos.ind1_nose_x.mean() - pos.single_left_wheel_x.mean()) ** 2
-                + (pos.ind1_nose_y.mean() - pos.single_left_wheel_y.mean()) ** 2]
-                ind2_dist_to_patches = [(pos.ind2_nose_x.mean() - pos.single_right_wheel_x.mean()) ** 2
-                + (pos.ind2_nose_y.mean() - pos.single_right_wheel_y.mean()) ** 2 ,
-                                         (pos.ind2_nose_x.mean() - pos.single_left_wheel_x.mean()) ** 2
-                + (pos.ind2_nose_y.mean() - pos.single_left_wheel_y.mean()) ** 2]
-                ind, patch = np.where(
-                    [ind1_dist_to_patches,
-                     ind2_dist_to_patches] == np.min([ind1_dist_to_patches, ind2_dist_to_patches]))
-                individuals_behaviors[name_mapping[ind]][behavior]
+                startt = start / behavior_fr
+                if startt < positions.Time[0] or startt > positions.Time[len(positions.Time) - 1]:
+                    ind, patch = None, None
+                else:
+                    end = behaviors[behavior]['end'][i]
+                    endt = end/behavior_fr
+                    pos = positions.iloc[list((startt <= positions.Time) * (positions.Time <= endt))]
+                    if (pos.ind1_nose_x == np.nan).all() and (pos.ind2_nose_x == np.nan).all():
+                        print(pos.ind1_nose_x)
+                        print(pos.ind2_nose_x)
+                        ind1_dist_to_patches = [(pos.ind1_nose_x.mean() - pos.single_right_wheel_x.mean()) ** 2
+                        + (pos.ind1_nose_y.mean() - pos.single_right_wheel_y.mean()) ** 2,
+                                                 (pos.ind1_nose_x.mean() - pos.single_left_wheel_x.mean()) ** 2
+                        + (pos.ind1_nose_y.mean() - pos.single_left_wheel_y.mean()) ** 2]
+                        ind2_dist_to_patches = [(pos.ind2_nose_x.mean() - pos.single_right_wheel_x.mean()) ** 2
+                                                + (pos.ind2_nose_y.mean() - pos.single_right_wheel_y.mean()) ** 2,
+                                                (pos.ind2_nose_x.mean() - pos.single_left_wheel_x.mean()) ** 2
+                                                + (pos.ind2_nose_y.mean() - pos.single_left_wheel_y.mean()) ** 2]
+                        print([ind1_dist_to_patches,
+                             ind2_dist_to_patches])
+                        ind, patch = np.where(
+                            [ind1_dist_to_patches,
+                             ind2_dist_to_patches] == np.min([ind1_dist_to_patches, ind2_dist_to_patches]))
+                        print(ind, patch)
+                        ind = ind.item() + 1
+                        patch = patch.item() + 1
+                    else :
+                        ind, patch = None, None
+                    behaviors[behavior]['individual_close_from_patch'].append(ind)
+                    behaviors[behavior]['patch_of_interest'].append(patch)
+    return behaviors
 
 
-
-
-
+behaviors = behavior_parser(lines)
+sessid = get_sessid(lines)
+behaviors = discriminate_behaviours(behaviors, sessid)
+print(behaviors)
