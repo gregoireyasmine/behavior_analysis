@@ -26,13 +26,14 @@ mpl.rcParams['axes.titleweight'] = 'bold'
 
 ###  FIG 1 : basic data analysis
 
-fig, ax = plt.subplot_mosaic(['total_durations', 'variability'], ['mean_duration', 'frequency'])
+fig, ax = plt.subplot_mosaic([['total_durations', 'variability'], ['mean_duration', 'frequency']])
 BEHAVIORS = ['attack', 'close_by', 'direct_competition', 'foraging_vs_exploration',
              'investigation', 'separate_exploration', 'separate_foraging', 'travel_away', 'travel_towards']
 time_repart_subplot(ax['total_durations'])
 time_variability_hist_subplot(ax['variability'])
 subplot_mean(ax['mean'])
 subplot_frequencies(ax['frequency'])
+fig.suptitle('Annotated data analysis')
 
 
 def plot_characterization(behavior):
