@@ -1,8 +1,7 @@
-from sys import argv
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
 from os import listdir
+pos_data_dir = '/home/gregoiredy/mnt/delab/data/arena0.1/socialexperiment0_preprocessed/'
 
 
 def get_movie_file(annot):
@@ -38,8 +37,6 @@ def get_annot_end_time(annot):
 
 
 def behavior_parser(annot):
-    filepath = get_movie_file(annot)
-    annot_framerate = get_annot_framerate(annot)
     l = 0  # line count
     behaviors = {}
     while l < len(annot):
@@ -93,18 +90,18 @@ def get_threshold_change(sessid):
     if len(patch2) > len(patch1):
         patch = patch1
         patchid = 1
-    else :
+    else:
         patch = patch2
         patchid = 2
     row = 0
     initial_threshold = patch.iloc[0]['threshold']
-    while row < len(patch) and patch.iloc[row]['threshold'] == initial_threshold :
+    while row < len(patch) and patch.iloc[row]['threshold'] == initial_threshold:
         row += 1
-    if row < len(patch) :
+    if row < len(patch):
         return {'patchid': patchid,
                 'changetime': patch.iloc[row]['time_in_session'],
                 'init_threshold': initial_threshold,
-                'new_threshold': patch.iloc[row]['threshold'] }
+                'new_threshold': patch.iloc[row]['threshold']}
     else:
         return None
 
@@ -112,22 +109,23 @@ def get_threshold_change(sessid):
 def get_positions(sessid):
     datetime = pd.to_datetime(sessid.split('_')[1], utc=True)
     pos_csv = []
-    for file in listdir('sessionsdata/'):
-        if file[:8] == 'FrameTop':
-            datetimef = pd.to_datetime(file.split('_')[1], utc=True)
+    for directory in listdir('sessionsdata/'):
+        if directory[:8] == 'FrameTop':
+            datetimef = pd.to_datetime(directory.split('_')[1], utc=True)
             if abs(datetimef - datetime) < pd.Timedelta(10, 'm'):
-                pos_csv.append(file)
+                pos_csv.append(listdir(directory)[0])
     if len(pos_csv) > 1:
-        raise Exception("too many position csv files found for sessid :", sessid, "files found: ", [f for f in pos_csv])
+        raise FileNotFoundError("too many position csv files found for sessid :", sessid,
+                                "files found: ", [f for f in pos_csv])
     elif len(pos_csv) == 0:
-        raise Exception("no csv file found for sessid:", sessid)
-    else :
+        raise FileNotFoundError("no csv file found for sessid:", sessid)
+    else:
         file = pos_csv[0]
         datetimef = pd.to_datetime(file.split('_')[1], utc=True)
         positions = pd.read_csv('sessionsdata/'+file)
         offset = (datetimef - datetime).total_seconds()
-        positions.rename(columns = {'Unnamed: 0':'frame'}, inplace = True)
-        positions = positions.assign(Time=positions.frame/50 + offset)   #timestamp
+        positions.rename(columns={'Unnamed: 0': 'frame'}, inplace=True)
+        positions = positions.assign(Time=positions.frame/50 + offset)   # timestamp
         return positions
 
 
@@ -148,11 +146,10 @@ def discriminate_behaviours(behaviors, positions):
                     endt = end/behavior_fr
                     pos = positions.iloc[list((startt <= positions.Time) & (positions.Time <= endt))]
 
-
                     ind1_dist_to_patches = [(pos.ind1_nose_x.mean() - pos.single_right_wheel_x.mean()) ** 2
-                    + (pos.ind1_nose_y.mean() - pos.single_right_wheel_y.mean()) ** 2,
-                                             (pos.ind1_nose_x.mean() - pos.single_left_wheel_x.mean()) ** 2
-                    + (pos.ind1_nose_y.mean() - pos.single_left_wheel_y.mean()) ** 2]
+                                            + (pos.ind1_nose_y.mean() - pos.single_right_wheel_y.mean()) ** 2,
+                                            (pos.ind1_nose_x.mean() - pos.single_left_wheel_x.mean()) ** 2
+                                            + (pos.ind1_nose_y.mean() - pos.single_left_wheel_y.mean()) ** 2]
                     ind2_dist_to_patches = [(pos.ind2_nose_x.mean()
                                              - pos.single_right_wheel_x.mean()) ** 2
                                             + (pos.ind2_nose_y.mean() - pos.single_right_wheel_y.mean()) ** 2,
@@ -190,7 +187,7 @@ def make_videos_dicts():
             pos = get_positions(id)
             bhv = discriminate_behaviours(bhv, pos)
         except FileNotFoundError:
-            pass
+            pos = None
         mv_file = get_movie_file(l)
         video_dict = {'id': id,
                       'movie_file': mv_file,
@@ -204,4 +201,3 @@ def make_videos_dicts():
 
 
 make_videos_dicts()
-

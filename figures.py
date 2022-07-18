@@ -24,42 +24,15 @@ mpl.rcParams['axes.titleweight'] = 'bold'
 
 
 
-def plot_basic_info():
-    fig, axes = plt.subplot_mosaic([['video1pie', '.', 'allvideospie'],
-                                    ['.', '.', '.'],
-                                    ['.', 'std', 'std']], figsize=(18, 10), gridspec_kw=dict(width_ratios=[1, 0.5, 1],
-                                                                                             height_ratios=[1, 0.3, 1]))
+###  FIG 1 : basic data analysis
 
-    fig.patch.set_facecolor('#232323')
-
-    file = open('annot_files/mouse1_session1_001.annot', mode='r', encoding="utf-8-sig")
-    lines = file.readlines()
-    file.close()
-
-    behaviors, total_time = get_behavior_pie_chart(lines)
-    total_time = np.array(total_time)/get_annot_framerate(lines)
-    plot_pie_chart_time_repartition(axes['video1pie'], behaviors, total_time, 'video1')
-
-    total_time = np.zeros(9)
-
-    for n in '123456':
-        file = open('annot_files/mouse1_session1_00'+n+'.annot', mode='r', encoding="utf-8-sig")
-        lines = file.readlines()
-        file.close()
-        framerate = get_annot_framerate(lines)
-        total_time += np.array(get_behavior_pie_chart(lines)[1]) / framerate
-
-
-    plot_pie_chart_time_repartition(axes['allvideospie'], behaviors, total_time, 'all videos')
-
-    behaviors, std = total_time_variability_hist()
-    plot_time_variability_hist(axes['std'], behaviors, std)
-    axes['std'].set_title(label='behavior total duration variability among videos', y=-0.35)
-    axes['std'].patch.set_facecolor('#ababab')
-    axes['std'].set_xlabel('behaviors')
-    axes['std'].set_ylabel('std/mean of total duration')
-
-    fig.savefig('time_per_behavior')
+fig, ax = plt.subplot_mosaic(['total_durations', 'variability'], ['mean_duration', 'frequency'])
+BEHAVIORS = ['attack', 'close_by', 'direct_competition', 'foraging_vs_exploration',
+             'investigation', 'separate_exploration', 'separate_foraging', 'travel_away', 'travel_towards']
+time_repart_subplot(ax['total_durations'])
+time_variability_hist_subplot(ax['variability'])
+subplot_mean(ax['mean'])
+subplot_frequencies(ax['frequency'])
 
 
 def plot_characterization(behavior):
@@ -125,12 +98,11 @@ def plot_markov_chain_v0():
     plt.axis('off')
     plt.savefig('markov_chain_v0')
 
-
-
+'''
 behaviors = ['attack', 'close_by', 'direct_competition', 'foraging_vs_exploration',
              'investigation', 'separate_exploration', 'separate_foraging', 'travel_away', 'travel_towards']
 for behavior in behaviors:
     plot_characterization(behavior)
 
-
+'''
 

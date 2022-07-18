@@ -1,24 +1,27 @@
-from parsingannot import *
 import numpy as np
-import sys
-from os.path import expanduser
+
 
 BEHAVIORS = ['attack', 'close_by', 'direct_competition', 'foraging_vs_exploration',
              'investigation', 'separate_exploration', 'separate_foraging', 'travel_away', 'travel_towards']
 LABELDICT = {'attack': 'attack', 'close_by': 'close by', 'direct_competition': 'direct competition',
-                         'foraging_vs_exploration': 'foraging vs exploration', 'investigation': 'investigation',
-                         'separate_exploration': 'separate exploration', 'separate_foraging': 'separate foraging',
-                         'travel_away': 'travel away', 'travel_towards': 'travel towards'}
+             'foraging_vs_exploration': 'foraging vs exploration', 'investigation': 'investigation',
+             'separate_exploration': 'separate exploration', 'separate_foraging': 'separate foraging',
+             'travel_away': 'travel away', 'travel_towards': 'travel towards'}
+BAR_LABELS = ['attack', 'close\nby', 'direct\ncompetition', 'foraging vs\nexploration',
+              'investigation', 'separate\nexploration', 'separate\nforaging', 'travel\naway', 'travel\ntowards']
 
-## Behaviors repartition pie chart
+
+## Behaviors repartition pie chart ####################################################################################
 
 
-def behavior_total_durations(annot):
-    behavior_data = behavior_parser(annot)
-    durations = []
-    for behavior in BEHAVIORS:
-        behavior_total_durations.append(sum(behaviors[behavior]['duration']))
-    return behavior_total_durations
+def behavior_total_durations(videos: str):
+    total_durations = np.zeros(len(BEHAVIORS))
+    for n in videos:
+        behavior_vid_durations = []
+        behavior_data = np.load('data_video_' + n + '.npz')['behavior_data']
+        for behavior in BEHAVIORS:
+            behavior_vid_durations += sum(behavior_data[behavior]['duration'])
+    return total_durations
 
 
 def label_values(pct):
@@ -42,104 +45,138 @@ def label_time(durations):
 
 def plot_pie_chart_time_repartition(ax, durations, filename):
     behaviors_labels = np.array([LABELDICT[behavior] for behavior in BEHAVIORS])
-    labels = np.char.add(behaviors_labels, np.array([' ' for k in range(len(BEHAVIORS))]))
+    labels = np.char.add(behaviors_labels, np.array([" " for _ in range(len(BEHAVIORS))]))
     labels = np.char.add(labels, label_time(durations))
     ax.pie(behavior_total_durations, labels=labels[0],
            autopct=lambda pct: label_values(pct),
            shadow=True, startangle=0, counterclock=False, radius=1.8)
-    ax.set_title(label='total duration per behaviour, '+filename, y=-0.5)
-    return ax
+    ax.set_title(label='total duration per behavior, '+filename, y=-0.5)
 
 
-def time_repart_subplot(ax, filename, video = 'all'):
-    if type(video) == int:
-        f = open('annot_files/mouse1_session1_00' + n + '.annot', mode='r', encoding="utf-8-sig")
-        l = file.readlines()
-        f.close()
-        durations = behavior_total_durations(l)
-    elif video == 'all':
-        durations = np.zeros(len(BEHAVIORS))
-        for i, n in enumerate('123456'):
-            f = open('annot_files/mouse1_session1_00' + n + '.annot', mode='r', encoding="utf-8-sig")
-            l = file.readlines()
-            f.close()
-            durations += behavior_total_durations(l)
+def time_repart_subplot(ax, videos: str = '12345'):
+    durations = behavior_total_durations(videos=videos)
+    if videos == '12345':
+        filename = 'all videos'
+    else:
+        filename = 'video '
+        for n in videos[:-1]:
+            filename += n + ', '
+        filename += videos[-1]
+    plot_pie_chart_time_repartition(ax, durations, filename)
 
 
+## Duration variability ####################################################################################
 
-def total_time_variability_hist():
-    total_time = np.zeros([6, 9])
-    labels = ['attack', 'close\nby', 'direct\ncompetition', 'foraging vs\nexploration',
-                 'investigation', 'separate\nexploration', 'separate\nforaging', 'travel\naway', 'travel\ntowards']
-    for i, n in enumerate('123456'):
-        f = open('annot_files/mouse1_session1_00' + n + '.annot', mode='r', encoding="utf-8-sig")
-        l = file.readlines()
-        f.close()
-        total_time[i] = np.array(behavior_total_durations(l)[1])
+
+def total_time_variability_hist(videos: str = '12345'):
+    total_time = np.zeros([len(videos), len(BEHAVIORS)])
+    for i, n in enumerate(videos):
+        total_time[i] = np.array(behavior_total_durations(n))
     std = np.std(total_time, axis=0)/np.mean(total_time, axis=0)
-    return behaviors, std
+    return std
 
 
-def plot_time_variability_hist(ax, behaviors, std):
-    ax.bar([1.5*k for k in range(9)], std, tick_label=behaviors, width=0.4)
-    return ax
+def time_variability_hist_subplot(ax, videos: str = '12345'):
+    std = total_time_variability_hist(videos)
+    ax.bar([1.5*k for k in range(9)], std, tick_label=BAR_LABELS, width=0.4)
 
 
-def create_timeline(annot):
-    behaviors = behavior_parser(annot)
-    annot_framerate = get_annot_framerate(annot)
-    annot_start = get_annot_start_time(annot)
-    annot_end = get_annot_end_time(annot)
+## Timeline #########################################################################################################
+
+
+def create_timeline(n_video: str):
+
+    video_dict = np.load('data_video_' + n_video + '.npz')
+    behavior_data = video_dict['behavior_data']
+    annot_framerate = video_dict['annot_fr']
+    annot_start = video_dict['annot_start']
+    annot_end = video_dict['annot_end']
     time = np.arange(start=annot_start, stop=annot_end, step=1/annot_framerate)
     timeline = np.empty(np.shape(time), dtype='<U30')
-    for behavior in behaviors.keys():
-        for k in range(len(behaviors[behavior]['start'])):
-            behavior_start_frame = int(behaviors[behavior]['start'][k])
-            behavior_end_frame = int(behaviors[behavior]['end'][k])
+    for behavior in BEHAVIORS:
+        for k in range(len(behavior_data[behavior]['start'])):
+            behavior_start_frame = int(behavior_data[behavior]['start'][k])
+            behavior_end_frame = int(behavior_data[behavior]['end'][k])
             timeline[behavior_start_frame: behavior_end_frame] = behavior
     return time, timeline
 
 
-def get_mean_duration(behaviour, annot):
-    behaviours = behavior_parser(annot)
-    return np.mean(behaviours[behaviour]['duration']) / get_annot_framerate(annot)
+#### mean, std of duration and frequency ##############################################################################
 
 
-def get_total_occurences(behaviour, annot):
-    behaviours = behavior_parser(annot)
-    return len(behaviours[behaviour]['start'])
+def get_mean_and_std_duration(videos: str = '12345'):
+    durations = [[]] * len(BEHAVIORS)
+    for n in videos:
+        behavior_data, fr = np.load('data_video_' + n + '.npz')['behavior_data', 'annot_fr']
+        for i, bhv in enumerate(BEHAVIORS):
+            durations[i] += list(np.array(behavior_data[bhv]['duration'])/fr)
+    return [np.mean(durations[i]) for i in range(len(BEHAVIORS))], [np.std(durations[i]) for i in range(len(BEHAVIORS))]
 
 
-def get_distribution_over_time(behaviour, annot, timebin=300, binstart=0, binstop=7200):
-    behaviours = behavior_parser(annot)
-    fr = get_annot_framerate(annot)
-    bins = np.arange(start=binstart, stop=binstop, step=timebin)
-    start_times = np.array(behaviours[behaviour]['start'])/fr
-    return np.histogram(start_times, bins=bins)
+def get_frequencies(videos: str = '12345'):
+    total_time = 0
+    frequencies = np.zeros(len(BEHAVIORS))
+    for n in videos:
+        behavior_data, start, end = np.load('data_video_' + n + '.npz')['behavior_data', 'annot_start', 'annot_end']
+        total_time += start-end
+        frequencies += len(behavior_data['duration'])
+    return frequencies/total_time
 
 
-def get_threshold_change_triggered_distribution(behaviour, annot, timebin=300, binstart=0, binstop=7200):
-    sessid = get_sessid(annot)
-    threshold_change = get_threshold_change(sessid)
-    threshold_change_time = threshold_change['changetime']
-    behaviours = behavior_parser(annot)
-    fr = get_annot_framerate(annot)
-    bins = np.arange(start=binstart-threshold_change_time, stop=binstop+threshold_change_time, step=timebin)
-    start_times = np.array(behaviours[behaviour]['start']) / fr
-    return np.histogram(start_times-threshold_change_time, bins=bins)
+def subplot_mean(ax, videos: str = '12345'):
+    mean, std = get_mean_and_std_duration(videos)
+    ax.bar([k for k in range(len(BEHAVIORS))], mean, tick_label=BAR_LABELS, width=0.8, yerr=std)
 
 
-def get_next_behaviors_prob(behaviour, timeline):
-    other_behaviors = ['attack', 'close_by', 'direct_competition', 'foraging_vs_exploration',
-                       'investigation', 'separate_exploration', 'separate_foraging', 'travel_away', 'travel_towards']
-    other_behaviors.remove(behaviour)
+def subplot_frequencies(ax, videos: str = '12345'):
+    ax.bar([k for k in range(len(BEHAVIORS))], get_frequencies(videos), tick_label=BAR_LABELS, width=0.8)
+
+
+#### behavior distributions ###########################################################################################
+
+
+def get_distribution_over_time(videos: str = '12345', timebin: int = 300, binstart: int = 0, binstop: int = 5000):
+    distributions = {bhv: [] for bhv in BEHAVIORS}
+    for n in videos:
+        behavior_data, fr = np.load('data_video_' + n + '.npz')['behavior_data', 'annot_fr']
+        bins = np.arange(start=binstart, stop=binstop, step=timebin)
+        for bhv in BEHAVIORS:
+            start_times = np.array(behavior_data[bhv]['start'])/fr
+            distributions[bhv].append(np.histogram(start_times, bins=bins)/timebin)
+    return {bhv: np.mean(distributions[bhv], axis=0) for bhv in BEHAVIORS}
+
+
+def get_threshold_change_triggered_distribution(videos: str = '12345', timebin=300, binstart=0, binstop=5000):
+    distributions = {bhv: [] for bhv in BEHAVIORS}
+    for n in videos:
+        behavior_data, fr, threshold_change = np.load('data_video_' + n + '.npz')['threshold_change']
+        threshold_change_time = threshold_change['changetime']
+        bins = np.arange(start=binstart-threshold_change_time, stop=binstop+threshold_change_time, step=timebin)
+        for bhv in BEHAVIORS:
+            start_times = np.array(behavior_data[bhv]['start']) / fr
+            distributions[bhv].append(np.histogram(start_times - threshold_change_time, bins=bins)/timebin)
+    return bins, {bhv: np.mean(distributions[bhv], axis=0) for bhv in BEHAVIORS}
+
+
+def tctd_subplot(ax, videos: str = '12345'):
+    bins, tctd = get_threshold_change_triggered_distribution(videos)
+    for bhv in BEHAVIORS:
+        ax.plot(bins, tctd, label=LABELDICT[bhv])
+        ax.legend()
+
+
+#### markov analysis #################################################################################################
+
+def get_next_behaviors_prob(bhv, timeline):
+    other_behaviors = BEHAVIORS.copy()
+    other_behaviors.remove(bhv)
     next_behaviors_count = {b: 0 for b in other_behaviors}
-    i = 0
+    i: int = 0
     while i < np.shape(timeline)[0]:
-        if timeline[i] == behaviour:
-            while i + 1 < np.shape(timeline)[0] and (timeline[i] == behaviour or timeline[i] == ''):
+        if timeline[i] == bhv:
+            while i + 1 < np.shape(timeline)[0] and (timeline[i] == bhv or timeline[i] == ''):
                 i += 1
-            if timeline[i] != behaviour and timeline[i] != '':
+            if timeline[i] != bhv and timeline[i] != '':
                 next_behaviors_count[timeline[i]] += 1
         else:
             i += 1
@@ -148,57 +185,31 @@ def get_next_behaviors_prob(behaviour, timeline):
     return next_behaviors_count
 
 
-def get_previous_behaviour_prob(behaviour, timeline):
-    return get_next_behaviors_prob(behaviour, np.flip(timeline))
+def get_previous_behavior_prob(bhv, timeline):
+    return get_next_behaviors_prob(bhv, np.flip(timeline))
 
 
-def characterize_behavior(behavior):
-    behaviors = ['attack', 'close_by', 'direct_competition', 'foraging_vs_exploration',
-                 'investigation', 'separate_exploration', 'separate_foraging', 'travel_away', 'travel_towards']
-
-    other_behaviors = behaviors.copy()
-    other_behaviors.remove(behavior)
-    mean_duration = []
-    frequency = []
-    distribution_over_time = []
-    next_behaviors = {b: 0 for b in other_behaviors}
-    previous_behaviors = {b: 0 for b in other_behaviors}
-
-    tmax = []
-    for n in '12345':
-        file = open('annot_files/mouse1_session1_00' + n + '.annot', mode='r', encoding="utf-8-sig")
-        lines = file.readlines()
-        file.close()
-        tmax.append(get_annot_end_time(lines))
-    max_time = min(tmax)
-    for n in '12345':
-
-        file = open('annot_files/mouse1_session1_00' + n + '.annot', mode='r', encoding="utf-8-sig")
-        lines = file.readlines()
-        file.close()
-
-        time, timeline = create_timeline(lines)
-
-        mean_duration.append(get_mean_duration(behavior, lines))
-
-        frequency.append(get_total_occurences(behavior, lines)/time[-1])
-
-        distrib_over_time, bins = get_threshold_change_triggered_distribution(behavior, lines, binstop=5400)
-        distribution_over_time.append(distrib_over_time)
-
-        next_behaviors_prob = get_next_behaviors_prob(behavior, timeline)
-        previous_behaviors_prob = get_previous_behaviour_prob(behavior, timeline)
-        for b in other_behaviors:
-            next_behaviors[b] += next_behaviors_prob[b]/5
-            previous_behaviors[b] += previous_behaviors_prob[b]/5
-    distribution_over_time = np.sum(distribution_over_time, axis=0)
-    return {'mean_duration': np.mean(mean_duration),
-            'frequency': np.mean(frequency),
-            't_distrib': (distribution_over_time, bins),
-            'next_behaviour_prob': next_behaviors,
-            'prev_behaviour_prob': previous_behaviors}
+def next_behavior_pie_subplot(ax, bhv, videos='12345'):
+    nbp = np.zeros(len(BEHAVIORS) - 1)
+    for n in videos:
+        timeline = create_timeline(n)
+        nbp += get_next_behaviors_prob(bhv, timeline)
+    ax.pie(nbp,
+           autopct=lambda pct: label_values(pct),
+           shadow=True)
 
 
+def prev_behavior_pie_subplot(ax, bhv, videos='12345'):
+    nbp = np.zeros(len(BEHAVIORS) - 1)
+    for n in videos:
+        timeline = create_timeline(n)
+        nbp += get_previous_behavior_prob(bhv, timeline)
+    ax.pie(nbp,
+           autopct=lambda pct: label_values(pct),
+           shadow=True)
+
+
+'''
 def build_markov_chain_matrix_v0():
     behaviors = ['attack', 'close_by', 'direct_competition', 'foraging_vs_exploration',
                        'investigation', 'separate_exploration', 'separate_foraging', 'travel_away', 'travel_towards']
@@ -211,9 +222,4 @@ def build_markov_chain_matrix_v0():
             else:
                 P[i, j] = next_behaviour_probs[behavior_1][behavior_2]
     return P
-
-
-
-
-
-
+'''
