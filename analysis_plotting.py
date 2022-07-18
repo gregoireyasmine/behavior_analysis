@@ -20,7 +20,8 @@ def behavior_total_durations(videos: str):
         behavior_vid_durations = []
         behavior_data = np.load('data_video_' + n + '.npz', allow_pickle=True)['behavior_data']
         for behavior in BEHAVIORS:
-            behavior_vid_durations += sum(behavior_data[behavior]['duration'])
+            behavior_vid_durations.append(sum(behavior_data.item()[behavior]['duration']))
+        total_durations += behavior_vid_durations
     return total_durations
 
 
@@ -47,7 +48,7 @@ def plot_pie_chart_time_repartition(ax, durations, filename):
     behaviors_labels = np.array([LABELDICT[behavior] for behavior in BEHAVIORS])
     labels = np.char.add(behaviors_labels, np.array([" " for _ in range(len(BEHAVIORS))]))
     labels = np.char.add(labels, label_time(durations))
-    ax.pie(behavior_total_durations, labels=labels[0],
+    ax.pie(durations, labels=labels[0],
            autopct=lambda pct: label_values(pct),
            shadow=True, startangle=0, counterclock=False, radius=1.8)
     ax.set_title(label='total duration per behavior, '+filename, y=-0.5)
