@@ -5,12 +5,6 @@ import pandas as pd
 from os import listdir
 
 
-# file = open(argv[1], mode='r', encoding="utf-8-sig")
-file = open('annot_files/mouse1_session1_001.annot' , mode='r', encoding="utf-8-sig")
-lines = file.readlines()
-file.close()
-
-
 def get_movie_file(annot):
     movie_file_line = annot[1]
     char = 0
@@ -124,7 +118,7 @@ def get_positions(sessid):
             if abs(datetimef - datetime) < pd.Timedelta(10, 'm'):
                 pos_csv.append(file)
     if len(pos_csv) > 1:
-        raise Exception("too many position csv files found for sessid :", sessid, "files found: ", files)
+        raise Exception("too many position csv files found for sessid :", sessid, "files found: ", [f for f in pos_csv])
     elif len(pos_csv) == 0:
         raise Exception("no csv file found for sessid:", sessid)
     else :
@@ -137,8 +131,7 @@ def get_positions(sessid):
         return positions
 
 
-def discriminate_behaviours(behaviors, sessid):
-    positions = get_positions(sessid)
+def discriminate_behaviours(behaviors, positions):
     behavior_fr = 30
     for behavior in behaviors:
         if behavior in ['travel_towards', 'travel_away', 'direct_competition', 'close_by', 'foraging_vs_exploration']:
@@ -153,34 +146,62 @@ def discriminate_behaviours(behaviors, sessid):
                 else:
                     end = behaviors[behavior]['end'][i]
                     endt = end/behavior_fr
-                    pos = positions.iloc[list((startt <= positions.Time) * (positions.Time <= endt))]
-                    if (pos.ind1_nose_x == np.nan).all() and (pos.ind2_nose_x == np.nan).all():
-                        print(pos.ind1_nose_x)
-                        print(pos.ind2_nose_x)
-                        ind1_dist_to_patches = [(pos.ind1_nose_x.mean() - pos.single_right_wheel_x.mean()) ** 2
-                        + (pos.ind1_nose_y.mean() - pos.single_right_wheel_y.mean()) ** 2,
-                                                 (pos.ind1_nose_x.mean() - pos.single_left_wheel_x.mean()) ** 2
-                        + (pos.ind1_nose_y.mean() - pos.single_left_wheel_y.mean()) ** 2]
-                        ind2_dist_to_patches = [(pos.ind2_nose_x.mean() - pos.single_right_wheel_x.mean()) ** 2
-                                                + (pos.ind2_nose_y.mean() - pos.single_right_wheel_y.mean()) ** 2,
-                                                (pos.ind2_nose_x.mean() - pos.single_left_wheel_x.mean()) ** 2
-                                                + (pos.ind2_nose_y.mean() - pos.single_left_wheel_y.mean()) ** 2]
-                        print([ind1_dist_to_patches,
-                             ind2_dist_to_patches])
-                        ind, patch = np.where(
-                            [ind1_dist_to_patches,
-                             ind2_dist_to_patches] == np.min([ind1_dist_to_patches, ind2_dist_to_patches]))
-                        print(ind, patch)
+                    pos = positions.iloc[list((startt <= positions.Time) & (positions.Time <= endt))]
+
+
+                    ind1_dist_to_patches = [(pos.ind1_nose_x.mean() - pos.single_right_wheel_x.mean()) ** 2
+                    + (pos.ind1_nose_y.mean() - pos.single_right_wheel_y.mean()) ** 2,
+                                             (pos.ind1_nose_x.mean() - pos.single_left_wheel_x.mean()) ** 2
+                    + (pos.ind1_nose_y.mean() - pos.single_left_wheel_y.mean()) ** 2]
+                    ind2_dist_to_patches = [(pos.ind2_nose_x.mean()
+                                             - pos.single_right_wheel_x.mean()) ** 2
+                                            + (pos.ind2_nose_y.mean() - pos.single_right_wheel_y.mean()) ** 2,
+                                            (pos.ind2_nose_x.mean() - pos.single_left_wheel_x.mean()) ** 2
+                                            + (pos.ind2_nose_y.mean() - pos.single_left_wheel_y.mean()) ** 2]
+
+                    ind, patch = np.where(
+                        [ind1_dist_to_patches,
+                         ind2_dist_to_patches] == np.min([ind1_dist_to_patches, ind2_dist_to_patches]))
+                    if ind.size == 1:
                         ind = ind.item() + 1
+                    else:
+                        ind = None
+                    if patch.size == 1:
                         patch = patch.item() + 1
-                    else :
-                        ind, patch = None, None
-                    behaviors[behavior]['individual_close_from_patch'].append(ind)
-                    behaviors[behavior]['patch_of_interest'].append(patch)
+                    else:
+                        patch = None
+                behaviors[behavior]['individual_close_from_patch'].append(ind)
+                behaviors[behavior]['patch_of_interest'].append(patch)
     return behaviors
 
 
-behaviors = behavior_parser(lines)
-sessid = get_sessid(lines)
-behaviors = discriminate_behaviours(behaviors, sessid)
-print(behaviors)
+def make_videos_dicts():
+    for n in '123456':
+        f = open('annot_files/mouse1_session1_00' + n + '.annot', mode='r', encoding="utf-8-sig")
+        l = f.readlines()
+        f.close()
+        bhv = behavior_parser(l)
+        fr = get_annot_framerate(l)
+        a_start = get_annot_start_time(l)
+        a_end = get_annot_end_time(l)
+        id = get_sessid(l)
+        tc = get_threshold_change(id)
+        try:
+            pos = get_positions(id)
+            bhv = discriminate_behaviours(bhv, pos)
+        except FileNotFoundError:
+            pass
+        mv_file = get_movie_file(l)
+        video_dict = {'id': id,
+                      'movie_file': mv_file,
+                      'annot_fr': fr,
+                      'annot_start': a_start,
+                      'annot_end': a_end,
+                      'threshold_change': tc,
+                      'behavior_data': bhv,
+                      'pos_data': pos}
+        np.savez('data_video_' + str(n), **video_dict)
+
+
+make_videos_dicts()
+

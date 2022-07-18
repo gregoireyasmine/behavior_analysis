@@ -3,16 +3,22 @@ import numpy as np
 import sys
 from os.path import expanduser
 
+BEHAVIORS = ['attack', 'close_by', 'direct_competition', 'foraging_vs_exploration',
+             'investigation', 'separate_exploration', 'separate_foraging', 'travel_away', 'travel_towards']
+LABELDICT = {'attack': 'attack', 'close_by': 'close by', 'direct_competition': 'direct competition',
+                         'foraging_vs_exploration': 'foraging vs exploration', 'investigation': 'investigation',
+                         'separate_exploration': 'separate exploration', 'separate_foraging': 'separate foraging',
+                         'travel_away': 'travel away', 'travel_towards': 'travel towards'}
 
-def get_behavior_pie_chart(annot):
-    behaviors = behavior_parser(annot)
-    annotated_behaviors = ['attack', 'close_by', 'direct_competition', 'foraging_vs_exploration',
-                           'investigation', 'separate_exploration', 'separate_foraging', 'travel_away', 'travel_towards']
+## Behaviors repartition pie chart
 
-    behavior_total_durations = []
-    for behavior in annotated_behaviors:
+
+def behavior_total_durations(annot):
+    behavior_data = behavior_parser(annot)
+    durations = []
+    for behavior in BEHAVIORS:
         behavior_total_durations.append(sum(behaviors[behavior]['duration']))
-    return annotated_behaviors, behavior_total_durations
+    return behavior_total_durations
 
 
 def label_values(pct):
@@ -22,9 +28,9 @@ def label_values(pct):
         return str(int(pct)) + '%'
 
 
-def label_time(behavior_total_durations):
+def label_time(durations):
     time_labels = []
-    for time in behavior_total_durations:
+    for time in durations:
         if time//3600 > 0:
             time_labels.append('> ' + str(int(time // 3600)) + ' h')
         elif time//60 > 0:
@@ -34,15 +40,10 @@ def label_time(behavior_total_durations):
     return np.array([time_labels])
 
 
-def plot_pie_chart_time_repartition(ax, behaviors, behavior_total_durations, filename):
-    behaviors_labels_dict = {'attack': 'attack', 'close_by': 'close by', 'direct_competition': 'direct competition',
-                             'foraging_vs_exploration': 'foraging vs exploration', 'investigation': 'investigation',
-                             'separate_exploration': 'separate exploration', 'separate_foraging': 'separate foraging',
-                             'travel_away': 'travel away', 'travel_towards': 'travel towards'}
-    behaviors_labels = [behaviors_labels_dict[behavior] for behavior in behaviors]
-    behaviors_labels = np.array(behaviors_labels)
-    labels = np.char.add(behaviors_labels, np.array([' ' for k in range(len(behaviors))]))
-    labels = np.char.add(labels, label_time(behavior_total_durations))
+def plot_pie_chart_time_repartition(ax, durations, filename):
+    behaviors_labels = np.array([LABELDICT[behavior] for behavior in BEHAVIORS])
+    labels = np.char.add(behaviors_labels, np.array([' ' for k in range(len(BEHAVIORS))]))
+    labels = np.char.add(labels, label_time(durations))
     ax.pie(behavior_total_durations, labels=labels[0],
            autopct=lambda pct: label_values(pct),
            shadow=True, startangle=0, counterclock=False, radius=1.8)
@@ -50,15 +51,31 @@ def plot_pie_chart_time_repartition(ax, behaviors, behavior_total_durations, fil
     return ax
 
 
+def time_repart_subplot(ax, filename, video = 'all'):
+    if type(video) == int:
+        f = open('annot_files/mouse1_session1_00' + n + '.annot', mode='r', encoding="utf-8-sig")
+        l = file.readlines()
+        f.close()
+        durations = behavior_total_durations(l)
+    elif video == 'all':
+        durations = np.zeros(len(BEHAVIORS))
+        for i, n in enumerate('123456'):
+            f = open('annot_files/mouse1_session1_00' + n + '.annot', mode='r', encoding="utf-8-sig")
+            l = file.readlines()
+            f.close()
+            durations += behavior_total_durations(l)
+
+
+
 def total_time_variability_hist():
     total_time = np.zeros([6, 9])
-    behaviors = ['attack', 'close\nby', 'direct\ncompetition', 'foraging vs\nexploration',
+    labels = ['attack', 'close\nby', 'direct\ncompetition', 'foraging vs\nexploration',
                  'investigation', 'separate\nexploration', 'separate\nforaging', 'travel\naway', 'travel\ntowards']
     for i, n in enumerate('123456'):
-        file = open('annot_files/mouse1_session1_00' + n + '.annot', mode='r', encoding="utf-8-sig")
-        lines = file.readlines()
-        file.close()
-        total_time[i] = np.array(get_behavior_pie_chart(lines)[1])
+        f = open('annot_files/mouse1_session1_00' + n + '.annot', mode='r', encoding="utf-8-sig")
+        l = file.readlines()
+        f.close()
+        total_time[i] = np.array(behavior_total_durations(l)[1])
     std = np.std(total_time, axis=0)/np.mean(total_time, axis=0)
     return behaviors, std
 

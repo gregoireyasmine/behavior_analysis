@@ -4,6 +4,7 @@ import networkx as nx
 from networkx.drawing.nx_pydot import write_dot
 import matplotlib.image as mpimg
 from subprocess import check_call
+from analysis_plotting import *
 
 
 mpl.rcParams['font.family'] = 'Avenir'
@@ -20,7 +21,7 @@ mpl.rcParams['xtick.labelcolor'] = '#838787'
 mpl.rcParams['ytick.labelcolor'] = '#838787'
 mpl.rcParams['axes.labelcolor'] = '#838787'
 mpl.rcParams['axes.titleweight'] = 'bold'
-from data_analysis import *
+
 
 
 def plot_basic_info():
