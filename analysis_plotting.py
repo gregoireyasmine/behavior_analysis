@@ -87,7 +87,7 @@ def time_variability_hist_subplot(ax, videos: str = '12345'):
 
 def create_timeline(n_video: str):
     video_dict = np.load('data_video_' + n_video + '.npz', allow_pickle=True)
-    behavior_data = video_dict['behavior_data']
+    behavior_data = video_dict['behavior_data'].item()
     annot_framerate = video_dict['annot_fr']
     annot_start = video_dict['annot_start']
     annot_end = video_dict['annot_end']
@@ -120,7 +120,7 @@ def get_frequencies(videos: str = '12345'):
     frequencies = np.zeros(len(BEHAVIORS))
     for n in videos:
         video_dict = np.load('data_video_' + n + '.npz', allow_pickle=True)
-        behavior_data = video_dict['behavior_data']
+        behavior_data = video_dict['behavior_data'].item()
         start = video_dict['annot_start']
         end = video_dict['annot_end']
         total_time += start-end
@@ -145,7 +145,7 @@ def get_distribution_over_time(videos: str = '12345', timebin: int = 300, binsta
     bins = np.arange(start=binstart, stop=binstop, step=timebin)
     for n in videos:
         video_dict = np.load('data_video_' + n + '.npz', allow_pickle=True)
-        behavior_data = video_dict['behavior_data']
+        behavior_data = video_dict['behavior_data'].item()
         fr = video_dict['annot_fr']
         for bhv in BEHAVIORS:
             start_times = np.array(behavior_data[bhv]['start'])/fr
@@ -157,7 +157,7 @@ def get_threshold_change_triggered_distribution(videos: str = '12345', timebin=3
     distributions = {bhv: [] for bhv in BEHAVIORS}
     for n in videos:
         video_dict = np.load('data_video_' + n + '.npz', allow_pickle=True)
-        behavior_data = video_dict['behavior_data']
+        behavior_data = video_dict['behavior_data'].item()
         fr = video_dict['annot_fr']
         threshold_change_time = video_dict['threshold_change']['changetime']
         bins = np.arange(start=binstart-threshold_change_time, stop=binstop-threshold_change_time, step=timebin)
