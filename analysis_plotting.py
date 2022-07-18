@@ -18,7 +18,7 @@ def behavior_total_durations(videos: str):
     total_durations = np.zeros(len(BEHAVIORS))
     for n in videos:
         behavior_vid_durations = []
-        behavior_data = np.load('data_video_' + n + '.npz')['behavior_data']
+        behavior_data = np.load('data_video_' + n + '.npz', allow_pickle=True)['behavior_data']
         for behavior in BEHAVIORS:
             behavior_vid_durations += sum(behavior_data[behavior]['duration'])
     return total_durations
@@ -86,7 +86,7 @@ def time_variability_hist_subplot(ax, videos: str = '12345'):
 
 def create_timeline(n_video: str):
 
-    video_dict = np.load('data_video_' + n_video + '.npz')
+    video_dict = np.load('data_video_' + n_video + '.npz', allow_pickle=True)
     behavior_data = video_dict['behavior_data']
     annot_framerate = video_dict['annot_fr']
     annot_start = video_dict['annot_start']
@@ -107,7 +107,7 @@ def create_timeline(n_video: str):
 def get_mean_and_std_duration(videos: str = '12345'):
     durations = [[]] * len(BEHAVIORS)
     for n in videos:
-        behavior_data, fr = np.load('data_video_' + n + '.npz')['behavior_data', 'annot_fr']
+        behavior_data, fr = np.load('data_video_' + n + '.npz', allow_pickle=True)['behavior_data', 'annot_fr']
         for i, bhv in enumerate(BEHAVIORS):
             durations[i] += list(np.array(behavior_data[bhv]['duration'])/fr)
     return [np.mean(durations[i]) for i in range(len(BEHAVIORS))], [np.std(durations[i]) for i in range(len(BEHAVIORS))]
@@ -117,7 +117,7 @@ def get_frequencies(videos: str = '12345'):
     total_time = 0
     frequencies = np.zeros(len(BEHAVIORS))
     for n in videos:
-        behavior_data, start, end = np.load('data_video_' + n + '.npz')['behavior_data', 'annot_start', 'annot_end']
+        behavior_data, start, end = np.load('data_video_' + n + '.npz', allow_pickle=True)['behavior_data', 'annot_start', 'annot_end']
         total_time += start-end
         frequencies += len(behavior_data['duration'])
     return frequencies/total_time
@@ -138,7 +138,7 @@ def subplot_frequencies(ax, videos: str = '12345'):
 def get_distribution_over_time(videos: str = '12345', timebin: int = 300, binstart: int = 0, binstop: int = 5000):
     distributions = {bhv: [] for bhv in BEHAVIORS}
     for n in videos:
-        behavior_data, fr = np.load('data_video_' + n + '.npz')['behavior_data', 'annot_fr']
+        behavior_data, fr = np.load('data_video_' + n + '.npz', allow_pickle=True)['behavior_data', 'annot_fr']
         bins = np.arange(start=binstart, stop=binstop, step=timebin)
         for bhv in BEHAVIORS:
             start_times = np.array(behavior_data[bhv]['start'])/fr
@@ -149,7 +149,7 @@ def get_distribution_over_time(videos: str = '12345', timebin: int = 300, binsta
 def get_threshold_change_triggered_distribution(videos: str = '12345', timebin=300, binstart=0, binstop=5000):
     distributions = {bhv: [] for bhv in BEHAVIORS}
     for n in videos:
-        behavior_data, fr, threshold_change = np.load('data_video_' + n + '.npz')['threshold_change']
+        behavior_data, fr, threshold_change = np.load('data_video_' + n + '.npz', allow_pickle=True)['threshold_change']
         threshold_change_time = threshold_change['changetime']
         bins = np.arange(start=binstart-threshold_change_time, stop=binstop+threshold_change_time, step=timebin)
         for bhv in BEHAVIORS:
