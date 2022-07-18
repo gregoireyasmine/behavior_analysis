@@ -108,7 +108,7 @@ def get_mean_and_std_duration(videos: str = '12345'):
     durations = [[]] * len(BEHAVIORS)
     for n in videos:
         vid_dict = np.load('data_video_' + n + '.npz', allow_pickle=True)
-        behavior_data = vid_dict['behavior_data']
+        behavior_data = vid_dict['behavior_data'].item()
         fr = vid_dict['annot_fr']
         for i, bhv in enumerate(BEHAVIORS):
             durations[i] += list(np.array(behavior_data[bhv]['duration'])/fr)
