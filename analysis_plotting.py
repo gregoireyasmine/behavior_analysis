@@ -124,7 +124,7 @@ def get_frequencies(videos: str = '12345'):
         start = video_dict['annot_start']
         end = video_dict['annot_end']
         total_time += start-end
-        frequencies += len(behavior_data['duration'])
+        frequencies += [len(behavior_data[bhv]['duration']) for bhv in BEHAVIORS]
     return frequencies/total_time
 
 
