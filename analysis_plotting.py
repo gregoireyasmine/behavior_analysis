@@ -1,5 +1,6 @@
 import numpy as np
-
+import statistics as stat
+from scipy.stats import spearmanr
 
 BEHAVIORS = ['attack', 'close_by', 'direct_competition', 'foraging_vs_exploration',
              'investigation', 'separate_exploration', 'separate_foraging', 'travel_away', 'travel_towards']
@@ -18,9 +19,11 @@ def behavior_total_durations(videos: str):
     total_durations = np.zeros(len(BEHAVIORS))
     for n in videos:
         behavior_vid_durations = []
-        behavior_data = np.load('data_video_' + n + '.npz', allow_pickle=True)['behavior_data']
+        video_dict = np.load('data_video_' + n + '.npz', allow_pickle=True)
+        behavior_data = video_dict['behavior_data']
+        fr = video_dict['annot_fr']
         for behavior in BEHAVIORS:
-            behavior_vid_durations.append(sum(behavior_data.item()[behavior]['duration']))
+            behavior_vid_durations.append(sum(behavior_data.item()[behavior]['duration'])/fr)
         total_durations += behavior_vid_durations
     return total_durations
 
@@ -50,8 +53,8 @@ def plot_pie_chart_time_repartition(ax, durations, filename):
     labels = np.char.add(labels, label_time(durations))
     ax.pie(durations, labels=labels[0],
            autopct=lambda pct: label_values(pct),
-           shadow=True, startangle=0, counterclock=False, radius=1.8)
-    ax.set_title(label='total duration per behavior, '+filename, y=-0.5)
+           shadow=False, startangle=0, counterclock=False, radius=1.3)
+  #  ax.set_title(label='total duration per behavior, '+filename, y=-0.3)
 
 
 def time_repart_subplot(ax, videos: str = '12345'):
@@ -73,13 +76,16 @@ def total_time_variability_hist(videos: str = '12345'):
     total_time = np.zeros([len(videos), len(BEHAVIORS)])
     for i, n in enumerate(videos):
         total_time[i] = np.array(behavior_total_durations(n))
-    std = np.std(total_time, axis=0)/np.mean(total_time, axis=0)
-    return std
+    CV = np.std(total_time, axis=0)/np.mean(total_time, axis=0)
+    return CV
 
 
 def time_variability_hist_subplot(ax, videos: str = '12345'):
-    std = total_time_variability_hist(videos)
-    ax.bar([1.5*k for k in range(9)], std, tick_label=BAR_LABELS, width=0.4)
+    CV = total_time_variability_hist(videos)
+    ax.bar([k for k in range(9)], CV, tick_label=BAR_LABELS, width=0.6,
+           color = 'lightblue', edgecolor = 'black', linewidth = 1)
+    ax.set_ylabel(ylabel = 'total duration CV (mean/std) among videos')
+   # ax.set_title(label = 'Total behavior duration CV among videos', y =0)
 
 
 ## Timeline #########################################################################################################
@@ -105,14 +111,14 @@ def create_timeline(n_video: str):
 
 
 def get_mean_and_std_duration(videos: str = '12345'):
-    durations = [[]] * len(BEHAVIORS)
+    durations = {bhv: [] for bhv in BEHAVIORS}
     for n in videos:
         vid_dict = np.load('data_video_' + n + '.npz', allow_pickle=True)
         behavior_data = vid_dict['behavior_data'].item()
         fr = vid_dict['annot_fr']
         for i, bhv in enumerate(BEHAVIORS):
-            durations[i] += list(np.array(behavior_data[bhv]['duration'])/fr)
-    return [np.mean(durations[i]) for i in range(len(BEHAVIORS))], [np.std(durations[i]) for i in range(len(BEHAVIORS))]
+            durations[bhv] += list(np.array(behavior_data[bhv]['duration'])/fr)
+    return [np.mean(durations[bhv]) for bhv in BEHAVIORS], [np.std(durations[bhv]) for bhv in BEHAVIORS]
 
 
 def get_frequencies(videos: str = '12345'):
@@ -123,18 +129,42 @@ def get_frequencies(videos: str = '12345'):
         behavior_data = video_dict['behavior_data'].item()
         start = video_dict['annot_start']
         end = video_dict['annot_end']
-        total_time += start-end
+        total_time += end-start
         frequencies += [len(behavior_data[bhv]['duration']) for bhv in BEHAVIORS]
-    return frequencies/total_time
+    return 3600*frequencies/total_time
 
 
 def subplot_mean(ax, videos: str = '12345'):
     mean, std = get_mean_and_std_duration(videos)
-    ax.bar([k for k in range(len(BEHAVIORS))], mean, tick_label=BAR_LABELS, width=0.8, yerr=std)
+    yerr = np.array([[0, stdb] for stdb in std]).T
+    ax.bar([k for k in range(len(BEHAVIORS))], mean, tick_label=BAR_LABELS, width=0.8)
+    (_, caps, _) = ax.errorbar([k for k in range(len(BEHAVIORS))], mean, yerr = yerr, capsize = 10, ls = 'none',
+                               color='black')
+    for cap in caps:
+        cap.set_markeredgewidth(1)
+    # ax.set_title(label = 'mean duration (blue) and std (black) of behaviours', y=0)
+
+
+def boxplot_durations(ax, videos: str = '12345'):
+    durations = [[] for _ in BEHAVIORS]
+    for n in videos:
+        vid_dict = np.load('data_video_' + n + '.npz', allow_pickle=True)
+        behavior_data = vid_dict['behavior_data'].item()
+        fr = vid_dict['annot_fr']
+        for i, bhv in enumerate(BEHAVIORS):
+            durations[i] += list(np.array(behavior_data[bhv]['duration']) / fr)
+    bp = ax.boxplot(durations, whis = (10,90), showfliers = False, showmeans = True, meanline = True, labels = BAR_LABELS,
+               patch_artist= True, medianprops = {'linewidth': 1.5}, meanprops = {'linewidth': 1.5})
+    for patch in bp['boxes']:
+        patch.set_facecolor('lightblue')
+        patch.set_linewidth(1)
+    ax.set_ylabel(ylabel = 'behaviour duration (s)')
 
 
 def subplot_frequencies(ax, videos: str = '12345'):
-    ax.bar([k for k in range(len(BEHAVIORS))], get_frequencies(videos), tick_label=BAR_LABELS, width=0.8)
+    ax.bar([k for k in range(len(BEHAVIORS))], get_frequencies(videos), tick_label=BAR_LABELS, width=0.6,
+           color = 'lightblue', edgecolor = 'black', linewidth = 1)
+    ax.set_ylabel(ylabel = r'frequencies (h$^{-1}$)')
 
 
 #### behavior distributions ###########################################################################################
@@ -152,27 +182,73 @@ def get_distribution_over_time(videos: str = '12345', timebin: int = 300, binsta
             distributions[bhv].append(np.histogram(start_times, bins=bins)/timebin)
     return {bhv: np.mean(distributions[bhv], axis=0) for bhv in BEHAVIORS}
 
-
+"""
 def get_threshold_change_triggered_distribution(videos: str = '12345', timebin=300, binstart=0, binstop=5000):
     distributions = {bhv: [] for bhv in BEHAVIORS}
     for n in videos:
         video_dict = np.load('data_video_' + n + '.npz', allow_pickle=True)
-        behavior_data = video_dict['behavior_data'].item()
+        time, timeline = create_timeline(n)
         fr = video_dict['annot_fr']
-        threshold_change_time = video_dict['threshold_change']['changetime']
+        threshold_change_time = video_dict['threshold_change'].item()['changetime']
         bins = np.arange(start=binstart-threshold_change_time, stop=binstop-threshold_change_time, step=timebin)
         for bhv in BEHAVIORS:
-            start_times = np.array(behavior_data[bhv]['start']) / fr
-            distributions[bhv].append(np.histogram(start_times - threshold_change_time, bins=bins)/timebin)
+            bhv_occurences = time[timeline == bhv]
+            distributions[bhv].append(np.histogram(bhv_occurences - threshold_change_time, bins=bins)/timebin)
     return bins, {bhv: np.mean(distributions[bhv], axis=0) for bhv in BEHAVIORS}
+"""
+
+
+def get_tctf(videos:str = '12345', timebin=500, binstart=0, binstop=5000):
+    distributions = {bhv: np.zeros(int((binstop - binstart) / timebin) -1 ) for bhv in BEHAVIORS}
+    for n in videos:
+        video_dict = np.load('data_video_' + n + '.npz', allow_pickle=True)
+        time, timeline = create_timeline(n)
+        fr = video_dict['annot_fr']
+        threshold_change_time = video_dict['threshold_change'].item()['changetime']
+        bins = np.arange(start=binstart-threshold_change_time, stop=binstop-threshold_change_time, step=timebin)
+        for bhv in BEHAVIORS:
+            bhv_occurences = time[timeline == bhv] - threshold_change_time
+            h, b = np.histogram(bhv_occurences, bins = bins)
+            distributions[bhv] += h / (5 * timebin * fr)
+    return b, distributions
 
 
 def tctd_subplot(ax, videos: str = '12345'):
-    bins, tctd = get_threshold_change_triggered_distribution(videos)
+    bins, tctd = get_tctf(videos)
     for bhv in BEHAVIORS:
-        ax.plot(bins, tctd, label=LABELDICT[bhv])
-        ax.legend()
+        ax.plot(bins[:-1], tctd[bhv], label=LABELDICT[bhv])
+        ax.legend(loc = 'upper left')
 
+#### tc curve ########################################################################################################
+
+COMPETITION = ['direct_competition', 'close_by', 'travel_towards']
+SOLO = ['separate_exploration', 'travel_away', 'separate_foraging', 'foraging_vs_exploration']
+OTHER = ['attack', 'investigation']
+
+def tc_behavioral_curve(ax, videos: str = '12345'):
+    thresholds = []
+    p = []
+    for n in videos:
+        video_dict = np.load('data_video_' + n + '.npz', allow_pickle=True)
+        time, timeline = create_timeline(n)
+        fr = video_dict['annot_fr']
+        tc = video_dict['threshold_change'].item()
+        tc_time = tc['changetime']
+        t0 = tc['init_threshold']
+        t1 = tc['new_threshold']
+        solocount = np.sum(np.isin(timeline[time < tc_time], SOLO))
+        compet_count = np.sum(np.isin(timeline[time < tc_time], COMPETITION))
+        thresholds.append(t0)
+        p.append(compet_count /solocount + compet_count)
+        solocount = np.sum(np.isin(timeline[time > tc_time], SOLO))
+        compet_count = np.sum(np.isin(timeline[time > tc_time], COMPETITION))
+        thresholds.append(t1)
+        p.append(compet_count / solocount + compet_count)
+    r = spearmanr(thresholds, p)[0]
+    ax.scatter(thresholds, p)
+    m, b = np.polyfit(thresholds, p, 1)
+    ax.plot(thresholds, m*np.array(thresholds)+b, color='red', label='r = ' + str(r))
+    ax.legend()
 
 #### markov analysis #################################################################################################
 
