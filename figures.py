@@ -5,7 +5,7 @@ from networkx.drawing.nx_pydot import write_dot
 import matplotlib.image as mpimg
 from subprocess import check_call
 from analysis_plotting import *
-
+from markovchain import MarkovChain
 
 mpl.rcParams['font.family'] = 'Avenir'
 plt.rcParams['font.size'] = 13
@@ -46,6 +46,13 @@ tctd_subplot(ax['tc_triggered'])
 tc_behavioral_curve(ax['behavioral_curve'])
 plt.tight_layout()
 plt.savefig('tc analysis')
+
+
+### FIG3 : plotting some markov chains
+
+
+
+
 """"
 def plot_characterization(behavior):
     behaviors = ['attack', 'close_by', 'direct_competition', 'foraging_vs_exploration',
