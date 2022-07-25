@@ -1,5 +1,9 @@
 import sys
 from os.path import expanduser, exists
+import deeplabcut
+from os import listdir
+
+
 # As long as you have cloned the aeon_mecha_de folder into
 # repos in your home filter
 sys.path.append(expanduser('~/repos/aeon_mecha_de'))
@@ -44,7 +48,7 @@ df.id = df.id.apply(helpers.fixID, valid_ids=valid_ids)
 helpers.mergeSocial(df)
 helpers.merge(df)
 df = df[df.id.str.contains(';')]
-df = df[df.id.str.contains('706')] #we want 1 black and 1 bleached mouse
+df = df[df.id.str.contains('706')]  # we want 1 black and 1 bleached mouse
 
 
 def exportDataToCSV(limit=1e6):
@@ -56,6 +60,17 @@ def exportDataToCSV(limit=1e6):
             return
         else:
             done += 1
+
+
+dest = '/home/gregoiredy/mnt/delab/data/arena0.1/socialexperiment0_preprocessed/'
+config_path = '/home/gregoiredy/dlc_out_for_gregoire'
+
+for n in '2345':
+    video_path = '/nfs/nhome/live/gydegobert/to_annotate/' + str(n) + '/' \
+             + listdir('/nfs/nhome/live/gydegobert/to_annotate/' + str(n))[0]
+
+
+deeplabcut.analyze_videos(config_path, [video_path], save_as_csv=True, destfolder=dest)
 
 
 
