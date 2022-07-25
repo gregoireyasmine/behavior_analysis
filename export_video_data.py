@@ -70,7 +70,7 @@ config_path = '/home/gregoiredy/dlc_out_for_gregoire'
 for n in '12345':
     video_path = '/home/gregoiredy/to_annotate/' + str(n) + '/' \
              + listdir('/home/gregoiredy/to_annotate/video' + str(n) + '/')[0]
-    filename = np.load('data_video_' + str(n) + '.npz')['movie_file']
+    filename = np.load('data_video_' + str(n) + '.npz')['movie_file'].item()
     filename = filename.split('/')[-1]
     deeplabcut.analyze_videos(config_path, [video_path + filename], save_as_csv=True, destfolder=dest)
     shutil.copyfile(dest + filename + '_position.csv', 'sessionsdata/')
