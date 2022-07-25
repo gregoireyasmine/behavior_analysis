@@ -2,6 +2,8 @@ import sys
 from os.path import expanduser, exists
 import deeplabcut
 from os import listdir
+from parsingannot import *
+import shutil
 
 
 # As long as you have cloned the aeon_mecha_de folder into
@@ -65,12 +67,13 @@ def exportDataToCSV(limit=1e6):
 dest = '/home/gregoiredy/mnt/delab/data/arena0.1/socialexperiment0_preprocessed/'
 config_path = '/home/gregoiredy/dlc_out_for_gregoire'
 
-for n in '2345':
+for n in '12345':
     video_path = '/nfs/nhome/live/gydegobert/to_annotate/' + str(n) + '/' \
-             + listdir('/nfs/nhome/live/gydegobert/to_annotate/' + str(n))[0]
-
-
-deeplabcut.analyze_videos(config_path, [video_path], save_as_csv=True, destfolder=dest)
+             + listdir('/nfs/nhome/live/gydegobert/to_annotate/video' + str(n) + '/')[0]
+    filename = np.load('data_video_' + str(n) + '.npz')['movie_file']
+    filename = filename.split('/')[-1]
+    deeplabcut.analyze_videos(config_path, [video_path + filename], save_as_csv=True, destfolder=dest)
+    shutil.copyfile(dest + filename + '_position.csv', 'sessionsdata/')
 
 
 
