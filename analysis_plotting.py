@@ -410,7 +410,7 @@ def plot_angular_speeds(videos='12345'):
     fig, ax = plt.subplots(2, 1)
     bins, angular_speeds = angular_speeds_hist(videos)
     for i, side in enumerate(['left', 'right']):
-        ax[i].bar(bins, angular_speeds[side])
+        ax[i].bar(bins[:-1], angular_speeds[side], align='edge')
     fig.savefig('angular_speeds')
 
 
