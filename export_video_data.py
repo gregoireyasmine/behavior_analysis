@@ -65,7 +65,7 @@ def exportDataToCSV(limit=1e6):
 
 
 dest = '/home/gregoiredy/mnt/delab/data/arena0.1/socialexperiment0_preprocessed/'
-config_path = '/home/gregoiredy/dlc_out_for_gregoire'
+config_path = '/home/gregoiredy/dlc_out_for_gregoire/dlc_project/config.yaml'
 
 for n in '12345':
     video_path = '/home/gregoiredy/to_annotate/' + str(n) + '/' \
