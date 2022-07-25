@@ -5,38 +5,55 @@ from networkx.drawing.nx_pydot import write_dot
 import matplotlib.image as mpimg
 from subprocess import check_call
 from analysis_plotting import *
-
+from markovchain import MarkovChain
 
 mpl.rcParams['font.family'] = 'Avenir'
-plt.rcParams['font.size'] = 15
+plt.rcParams['font.size'] = 13
 mpl.rcParams['axes.labelsize'] = 12
 mpl.rcParams['xtick.labelsize'] = 10
-mpl.rcParams['ytick.labelsize'] = 12
-mpl.rcParams['legend.fontsize'] = 12
-mpl.rcParams['text.color'] = '#838787'
-mpl.rcParams['axes.titlecolor'] = '#34A5DA'
-mpl.rcParams['xtick.color'] = '#838787'
-mpl.rcParams['ytick.color'] = '#838787'
-mpl.rcParams['xtick.labelcolor'] = '#838787'
-mpl.rcParams['ytick.labelcolor'] = '#838787'
-mpl.rcParams['axes.labelcolor'] = '#838787'
+mpl.rcParams['ytick.labelsize'] = 10
+mpl.rcParams['legend.fontsize'] = 10
+mpl.rcParams['text.color'] = '#000000'
+mpl.rcParams['axes.titlecolor'] = '#000000'
+mpl.rcParams['xtick.color'] = '#000000'
+mpl.rcParams['ytick.color'] = '#000000'
+mpl.rcParams['xtick.labelcolor'] = '#000000'
+mpl.rcParams['ytick.labelcolor'] = '#000000'
+mpl.rcParams['axes.labelcolor'] = '#000000'
 mpl.rcParams['axes.titleweight'] = 'bold'
-
 
 
 ###  FIG 1 : basic data analysis
 
-fig, ax = plt.subplot_mosaic([['total_durations', 'variability'], ['mean_duration', 'frequency']])
+fig, ax = plt.subplot_mosaic([['total_durations', 'variability'], ['mean_duration', 'frequency']], figsize=(20, 11))
 BEHAVIORS = ['attack', 'close_by', 'direct_competition', 'foraging_vs_exploration',
              'investigation', 'separate_exploration', 'separate_foraging', 'travel_away', 'travel_towards']
 time_repart_subplot(ax['total_durations'])
 time_variability_hist_subplot(ax['variability'])
-subplot_mean(ax['mean_duration'])
+boxplot_durations(ax['mean_duration'])
 subplot_frequencies(ax['frequency'])
-fig.suptitle('Annotated data analysis')
+titles = ['A', 'B', 'C', 'D']
+xs = [-0.6, -0.05, -0.05, -0.05]
+for i, axx in enumerate(ax):
+    ax[axx].set_title(label = titles[i], loc = 'left', y=1.05, x=xs[i])
 plt.tight_layout()
 plt.savefig('basic_data_analysis')
 
+### FIG 2 : behaviour evolution (tc)
+
+fig, ax = plt.subplot_mosaic([['tc_triggered', 'behavioral_curve']], figsize = (13, 8))
+tctd_subplot(ax['tc_triggered'])
+tc_behavioral_curve(ax['behavioral_curve'])
+plt.tight_layout()
+plt.savefig('tc analysis')
+
+
+### FIG3 : plotting some markov chains
+
+
+
+
+""""
 def plot_characterization(behavior):
     behaviors = ['attack', 'close_by', 'direct_competition', 'foraging_vs_exploration',
                  'investigation', 'separate_exploration', 'separate_foraging', 'travel_away', 'travel_towards']
@@ -99,7 +116,7 @@ def plot_markov_chain_v0():
     nx.draw_networkx_edge_labels(G, pos, edge_labels)
     plt.axis('off')
     plt.savefig('markov_chain_v0')
-
+"""
 '''
 behaviors = ['attack', 'close_by', 'direct_competition', 'foraging_vs_exploration',
              'investigation', 'separate_exploration', 'separate_foraging', 'travel_away', 'travel_towards']
