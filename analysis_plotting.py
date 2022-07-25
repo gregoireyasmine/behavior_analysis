@@ -400,7 +400,7 @@ def angular_speeds_hist(videos='12345'):
             angular_speeds[side].append(list(speed[side]))
     bin = 10
     for side in angular_speeds.keys():
-        print(side, ' : ', angular_speeds[side])
+        print(side, ' : ', np.shape(angular_speeds[side]))
         h, bin_edges = np.histogram(angular_speeds[side], bins=bin)
         bin = bin_edges
         angular_speeds[side] = h
