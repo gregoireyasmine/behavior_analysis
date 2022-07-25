@@ -77,4 +77,3 @@ for n in '12345':
     shutil.copyfile(dest + filename + '_position.csv', 'sessionsdata/')
 
 
-

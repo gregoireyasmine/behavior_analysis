@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from scipy.stats import spearmanr
 from markovchain import MarkovChain
 import matplotlib.pyplot as plt
@@ -379,13 +380,46 @@ def markov_1(ax, videos='12345'):
     mc.draw(ax=ax, show=False)
 
 
+def compute_angular_speeds(video: str):
+    video_dict = np.load('data_video_' + n + '.npz', allow_pickle=True)
+    wheel_data = video_dict['wheel_data'].item()
+    angular_speed_df = pd.DataFrame()
+    for side in 'right', 'left':
+        if len(angular_speed_df) == 0:
+            angular_speed_df['Time'] = wheel_data[side]['Time']
+        delta_theta = wheel_data[side].diff()
+        angular_speed_df[side] = delta_theta['angle']/delta_theta['Time']
+    return angular_speed_df
+
+
+def angular_speeds_hist(videos='12345'):
+    angular_speeds = {'left': [], 'right': []}
+    for n in videos:
+        speed = compute_angular_speeds(n)
+        for side in angular_speeds.keys():
+            angular_speeds[side].append(list(speed[side]))
+    bins = 10
+    for side in angular_speeds.keys():
+        h, bins = np.histogram(angular_speeds[side], bins=bins)
+        angular_speeds[side] = h
+    return bins, angular_speeds
+
+
+def plot_angular_speeds(videos = '12345'):
+    fig, ax = plt.subplots(2, 1)
+    bins, angular_speeds = angular_speeds_hist(videos)
+    for i, side in enumerate(['left', 'right']):
+        ax[i].bar(bins, angular_speeds)
+    fig.savefig('angular_speeds')
+
+
 def compare_foraging_annot(videos='12345'):
     for n in videos:
         time, timeline = create_timeline(n)
         video_dict = np.load('data_video_' + n + '.npz', allow_pickle=True)
+        wheel_data = video_dict['wheel_data']
 
 
-
-
+plot_angular_speeds()
 
 
