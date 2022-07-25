@@ -393,11 +393,11 @@ def compute_angular_speeds(video: str):
 
 
 def angular_speeds_hist(videos='12345'):
-    angular_speeds = {'left': [], 'right': []}
+    angular_speeds = {'left': np.array([]), 'right': np.array([])}
     for n in videos:
         speed = compute_angular_speeds(n)
         for side in angular_speeds.keys():
-            angular_speeds[side].append(list(speed[side]))
+            np.concatenate((angular_speeds[side], (speed[side])))
     bin = 10
     for side in angular_speeds.keys():
         print(side, ' : ', np.shape(angular_speeds[side]))
