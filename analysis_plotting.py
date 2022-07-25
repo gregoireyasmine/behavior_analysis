@@ -398,14 +398,13 @@ def angular_speeds_hist(videos='12345'):
         speed = compute_angular_speeds(n)
         for side in angular_speeds.keys():
             angular_speeds[side].append(list(speed[side]))
-    bins = 10
+    bin = 10
     for side in angular_speeds.keys():
-        if type(bins) == np.ndarray:
-            bins = list(bins)
-            print(bins)
-        h, bins = np.histogram(angular_speeds[side], bins=bins)
+        print(side, ' : ', bin)
+        h, bin_edges = np.histogram(angular_speeds[side], bins=bin)
+        bin = bin_edges
         angular_speeds[side] = h
-    return bins, angular_speeds
+    return bin_edges, angular_speeds
 
 
 def plot_angular_speeds(videos = '12345'):
