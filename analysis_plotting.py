@@ -400,14 +400,14 @@ def angular_speeds_hist(videos='12345'):
             angular_speeds[side].append(list(speed[side]))
     bin = 10
     for side in angular_speeds.keys():
-        print(side, ' : ', bin)
+        print(side, ' : ', angular_speeds[side])
         h, bin_edges = np.histogram(angular_speeds[side], bins=bin)
         bin = bin_edges
         angular_speeds[side] = h
     return bin_edges, angular_speeds
 
 
-def plot_angular_speeds(videos = '12345'):
+def plot_angular_speeds(videos='12345'):
     fig, ax = plt.subplots(2, 1)
     bins, angular_speeds = angular_speeds_hist(videos)
     for i, side in enumerate(['left', 'right']):
