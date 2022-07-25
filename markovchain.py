@@ -133,15 +133,18 @@ class MarkovChain:
             ax.annotate(str(prob), xy=(x_prob, y_prob), color='#000000', **self.text_args)
 
 
-    def draw(self, img_path=None):
+    def draw(self, ax = None, img_path=None, show=True):
         """
         Draw the Markov Chain
         """
-        fig, ax = plt.subplots(figsize=self.figsize)
-
+        if ax is None:
+            fig, ax = plt.subplots(figsize=self.figsize)
+            method = plt
+        else:
+            method = ax
         # Set the axis limits
-        plt.xlim(self.xlim)
-        plt.ylim(self.ylim)
+        method.xlim(self.xlim)
+        method.ylim(self.ylim)
 
         # Draw the nodes
         for node in self.nodes:
@@ -154,15 +157,16 @@ class MarkovChain:
                 if i == j:
                     # Loop direction
                     if self.nodes[i].y >= 0:
-                        self.nodes[i].add_self_loop(ax, prob = self.M[i,j], direction='up')
+                        self.nodes[i].add_self_loop(ax, prob=self.M[i, j], direction='up')
                     else:
-                        self.nodes[i].add_self_loop(ax, prob = self.M[i,j], direction='down')
+                        self.nodes[i].add_self_loop(ax, prob=self.M[i, j], direction='down')
                 # directed arrows
-                elif self.M[i,j] > 0:
-                    self.add_arrow(ax, self.nodes[i], self.nodes[j], prob = self.M[i,j])
+                elif self.M[i, j] > 0:
+                    self.add_arrow(ax, self.nodes[i], self.nodes[j], prob=self.M[i, j])
 
-        plt.axis('off')
+        method.axis('off')
         # Save the image to disk?
         if img_path:
             plt.savefig(img_path)
-        plt.show()
+        if show:
+            plt.show()

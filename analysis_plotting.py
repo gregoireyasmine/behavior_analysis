@@ -1,18 +1,16 @@
 import numpy as np
-import statistics as stat
 from scipy.stats import spearmanr
 from markovchain import MarkovChain
-import matplotlib as mpl
 import matplotlib.pyplot as plt
-
-
 
 BEHAVIORS = ['attack', 'close_by', 'direct_competition', 'foraging_vs_exploration',
              'investigation', 'separate_exploration', 'separate_foraging', 'travel_away', 'travel_towards']
+
 LABELDICT = {'attack': 'attack', 'close_by': 'close by', 'direct_competition': 'direct competition',
              'foraging_vs_exploration': 'foraging vs exploration', 'investigation': 'investigation',
              'separate_exploration': 'separate exploration', 'separate_foraging': 'separate foraging',
              'travel_away': 'travel away', 'travel_towards': 'travel towards'}
+
 BAR_LABELS = ['attack', 'close\nby', 'direct\ncompetition', 'foraging vs\nexploration',
               'investigation', 'separate\nexploration', 'separate\nforaging', 'travel\naway', 'travel\ntowards']
 
@@ -52,16 +50,13 @@ def label_time(durations):
     return np.array([time_labels])
 
 
-def plot_pie_chart_time_repartition(ax, durations, filename):
+def plot_pie_chart_time_repartition(ax, durations):
     behaviors_labels = np.array([LABELDICT[behavior] for behavior in BEHAVIORS])
     labels = np.char.add(behaviors_labels, np.array([" " for _ in range(len(BEHAVIORS))]))
     labels = np.char.add(labels, label_time(durations))
     ax.pie(durations, labels=labels[0],
            autopct=lambda pct: label_values(pct),
            shadow=False, startangle=0, counterclock=False, radius=1.3)
-
-
-#  ax.set_title(label='total duration per behavior, '+filename, y=-0.3)
 
 
 def time_repart_subplot(ax, videos: str = '12345'):
@@ -73,7 +68,8 @@ def time_repart_subplot(ax, videos: str = '12345'):
         for n in videos[:-1]:
             filename += n + ', '
         filename += videos[-1]
-    plot_pie_chart_time_repartition(ax, durations, filename)
+    plot_pie_chart_time_repartition(ax, durations)
+    ax.set_title(label=filename)
 
 
 ## Duration variability ####################################################################################
@@ -83,13 +79,13 @@ def total_time_variability_hist(videos: str = '12345'):
     total_time = np.zeros([len(videos), len(BEHAVIORS)])
     for i, n in enumerate(videos):
         total_time[i] = np.array(behavior_total_durations(n))
-    CV = np.std(total_time, axis=0) / np.mean(total_time, axis=0)
-    return CV
+    cv = np.std(total_time, axis=0) / np.mean(total_time, axis=0)
+    return cv
 
 
 def time_variability_hist_subplot(ax, videos: str = '12345'):
-    CV = total_time_variability_hist(videos)
-    ax.bar([k for k in range(9)], CV, tick_label=BAR_LABELS, width=0.6,
+    cv = total_time_variability_hist(videos)
+    ax.bar([k for k in range(9)], cv, tick_label=BAR_LABELS, width=0.6,
            color='lightblue', edgecolor='black', linewidth=1)
     ax.set_ylabel(ylabel='total duration CV (mean/std) among videos')
     # ax.set_title(label = 'Total behavior duration CV among videos', y =0)
@@ -148,7 +144,6 @@ def subplot_mean(ax, videos: str = '12345'):
                                color='black')
     for cap in caps:
         cap.set_markeredgewidth(1)
-    # ax.set_title(label = 'mean duration (blue) and std (black) of behaviours', y=0)
 
 
 def boxplot_durations(ax, videos: str = '12345'):
@@ -189,23 +184,8 @@ def get_distribution_over_time(videos: str = '12345', timebin: int = 300, binsta
     return {bhv: np.mean(distributions[bhv], axis=0) for bhv in BEHAVIORS}
 
 
-"""
-def get_threshold_change_triggered_distribution(videos: str = '12345', timebin=300, binstart=0, binstop=5000):
-    distributions = {bhv: [] for bhv in BEHAVIORS}
-    for n in videos:
-        video_dict = np.load('data_video_' + n + '.npz', allow_pickle=True)
-        time, timeline = create_timeline(n)
-        fr = video_dict['annot_fr']
-        threshold_change_time = video_dict['threshold_change'].item()['changetime']
-        bins = np.arange(start=binstart-threshold_change_time, stop=binstop-threshold_change_time, step=timebin)
-        for bhv in BEHAVIORS:
-            bhv_occurences = time[timeline == bhv]
-            distributions[bhv].append(np.histogram(bhv_occurences - threshold_change_time, bins=bins)/timebin)
-    return bins, {bhv: np.mean(distributions[bhv], axis=0) for bhv in BEHAVIORS}
-"""
-
-
-def get_tctf(videos: str = '12345', timebin=500, binstart=0, binstop=5000):
+def get_tctf(videos: str = '12345', timebin=500, binstart=0,
+             binstop=5000):  # local frequency variations triggered by threshold change
     distributions = {bhv: np.zeros(int((binstop - binstart) / timebin) - 1) for bhv in BEHAVIORS}
     for n in videos:
         video_dict = np.load('data_video_' + n + '.npz', allow_pickle=True)
@@ -242,7 +222,6 @@ def tc_behavioral_curve(ax, videos: str = '12345'):
     for n in videos:
         video_dict = np.load('data_video_' + n + '.npz', allow_pickle=True)
         time, timeline = create_timeline(n)
-        fr = video_dict['annot_fr']
         tc = video_dict['threshold_change'].item()
         tc_time = tc['changetime']
         t0 = tc['init_threshold']
@@ -288,14 +267,18 @@ def get_next_behaviors(bhv, timeline):
     return next_behaviors_count
 
 
+def get_previous_behaviors(bhv, timeline):
+    return get_next_behaviors(bhv, np.flip(timeline))
+
+
 def get_next_behaviors_same_included(bhv, timeline):
     next_behaviors_count = {b: 0 for b in BEHAVIORS}
     i: int = 0
     while i < np.shape(timeline)[0]:
-        if timeline[i] == bhv and i+1 < np.shape(timeline)[0]:
-            i+=1
-            while timeline[i] == '' and i+1 < np.shape(timeline)[0]:
-                i+=1
+        if timeline[i] == bhv and i + 1 < np.shape(timeline)[0]:
+            i += 1
+            while timeline[i] == '' and i + 1 < np.shape(timeline)[0]:
+                i += 1
             if timeline[i] != '':
                 next_behaviors_count[timeline[i]] += 1
         else:
@@ -303,15 +286,11 @@ def get_next_behaviors_same_included(bhv, timeline):
     return next_behaviors_count
 
 
-def get_previous_behaviors(bhv, timeline):
-    return get_next_behaviors_count(bhv, np.flip(timeline))
-
-
 def next_behavior_pie_subplot(ax, bhv, videos='12345'):
     nbp = np.zeros(len(BEHAVIORS) - 1)
     for n in videos:
         timeline = create_timeline(n)
-        nbp += get_next_behaviors_prob(bhv, timeline)
+        nbp += get_next_behaviors(bhv, timeline)
     ax.pie(nbp,
            autopct=lambda pct: label_values(pct),
            shadow=True)
@@ -321,7 +300,7 @@ def prev_behavior_pie_subplot(ax, bhv, videos='12345'):
     nbp = np.zeros(len(BEHAVIORS) - 1)
     for n in videos:
         timeline = create_timeline(n)
-        nbp += get_previous_behavior_prob(bhv, timeline)
+        nbp += get_previous_behaviors(bhv, timeline)
     ax.pie(nbp,
            autopct=lambda pct: label_values(pct),
            shadow=True)
@@ -344,70 +323,69 @@ def get_markov_matrix(videos='12345', include_same=False):
 
 
 def get_transition_probability(mm, state_1, state_2, steps,
-                               forbidden_steps=['separate_foraging', 'separate_exploration',
-                                                  'foraging_vs_exploration', 'direct_competition',
-                                                  'close_by']):
+                               forbidden_steps=None):
     """ Probability to go from one state to the other through [steps] intermediary steps"""
+    if forbidden_steps is None:
+        forbidden_steps = ['separate_foraging', 'separate_exploration',
+                           'foraging_vs_exploration', 'direct_competition',
+                           'close_by']
     p = 0
     for behavior in BEHAVIORS:
-         # for each other behavior
-         if not(behavior in forbidden_steps):
+        #  for each other behavior
+        if not (behavior in forbidden_steps):
             p += mm[state_1][behavior]
     p_i = 0
     for behavior_1 in BEHAVIORS:
         for behavior_2 in BEHAVIORS:
-            if not((behavior_1 in forbidden_steps) or (behavior_2 in forbidden_steps)):
-                if behavior_1 != behavior_2 :
+            if not ((behavior_1 in forbidden_steps) or (behavior_2 in forbidden_steps)):
+                if behavior_1 != behavior_2:
                     p_i += mm[behavior_1][behavior_2]
-    p *= p_i ** (steps-1)
+    p *= p_i ** (steps - 1)
     p_i = 0
     for behavior in BEHAVIORS:
-        if not(behavior in forbidden_steps):
+        if not (behavior in forbidden_steps):
             p_i += mm[behavior][state_2]
     p *= p_i
     return p
 
 
-def markov_1(videos='12345'):
-    states = {'social_foraging':['close_by', 'direct_competition'], 'travel_towards': ['travel_towards'], 'travel_away': ['travel_away'],
-              'notsocialforaging':['attack', 'foraging_vs_exploration','investigation', 'separate_exploration', 'separate_foraging']}   ## ALPHABETIC ORDER FOR BHV
+def collapse_markov(mm, states_dict: dict, videos='12345'):
+    """ Collapse markov matrix to states of interest. """
+    collapsed_mm = np.zeros((len(states_dict.keys()), len(states_dict.keys())))
     total_durations = behavior_total_durations(videos)
-    complete_mm = get_markov_matrix(videos, include_same=True)
-    print(complete_mm)
-    collapsed_mm = np.zeros((4, 4))
-    for i, s1 in enumerate(states.keys()):
-        for j, s2 in enumerate(states.keys()):
-            s1_repart = total_durations[np.isin(BEHAVIORS, states[s1])]
-            s1_repart/=sum(s1_repart)
+    for i, s1 in enumerate(states_dict.keys()):
+        for j, s2 in enumerate(states_dict.keys()):
+            s1_repart = total_durations[np.isin(BEHAVIORS, states_dict[s1])]
+            s1_repart /= sum(s1_repart)
             p_transition = 0
-            for k, b1 in enumerate(states[s1]):
-                for b2 in states[s2]:
-                    p_transition += complete_mm[b1][b2] * s1_repart[k]
+            for k, b1 in enumerate(states_dict[s1]):
+                for b2 in states_dict[s2]:
+                    p_transition += mm[b1][b2] * s1_repart[k]
             collapsed_mm[i, j] = p_transition
     collapsed_mm = np.linalg.matrix_power(collapsed_mm, 30)
-    collapsed_mm = np.around(collapsed_mm, decimals = 2)
-    mc = MarkovChain(collapsed_mm, ['social\nforaging', 'travel\ntowards', 'travel\naway', 'non social\nor out of patch'])
-    mc.draw()
-
-markov_1()
-plt.savefig('markovchain')
+    collapsed_mm = np.around(collapsed_mm, decimals=2)
+    return collapsed_mm
 
 
+def markov_1(ax, videos='12345'):
+    states = {'social_foraging': ['close_by', 'direct_competition'], 'travel_towards': ['travel_towards'],
+              'travel_away': ['travel_away'],
+              'notsocialforaging': ['attack', 'foraging_vs_exploration', 'investigation', 'separate_exploration',
+                                    'separate_foraging']}  # ALPHABETIC ORDER FOR BHV
+    complete_mm = get_markov_matrix(videos, include_same=True)
+    collapsed_mm = collapse_markov(complete_mm, states_dict=states, videos=videos)
+    mc = MarkovChain(collapsed_mm,
+                     ['social\nforaging', 'travel\ntowards', 'travel\naway', 'non social\nor out of patch'])
+    mc.draw(ax=ax, show=False)
+
+
+def compare_foraging_annot(videos='12345'):
+    for n in videos:
+        time, timeline = create_timeline(n)
+        video_dict = np.load('data_video_' + n + '.npz', allow_pickle=True)
 
 
 
 
-'''
-def build_markov_chain_matrix_v0():
-    behaviors = ['attack', 'close_by', 'direct_competition', 'foraging_vs_exploration',
-                       'investigation', 'separate_exploration', 'separate_foraging', 'travel_away', 'travel_towards']
-    next_behaviour_probs = {behavior: characterize_behavior(behavior)['next_behaviour_prob'] for behavior in behaviors}
-    P = np.zeros([len(behaviors), len(behaviors)])
-    for i, behavior_1 in enumerate(behaviors):
-        for j, behavior_2 in enumerate(behaviors):
-            if i == j:
-                pass
-            else:
-                P[i, j] = next_behaviour_probs[behavior_1][behavior_2]
-    return P
-'''
+
+

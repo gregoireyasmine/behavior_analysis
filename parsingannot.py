@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from os import listdir
+from os.path import exists
 pos_data_dir = '/home/gregoiredy/mnt/delab/data/arena0.1/socialexperiment0_preprocessed/'
 
 
@@ -129,6 +130,25 @@ def get_positions(sessid):
         return positions
 
 
+def get_wheel_data(sessid):
+    datetime = pd.to_datetime(sessid.split('_')[1], utc=True)
+
+    if exists('sessionsdata/wheel1_'+sessid+'.csv'):
+        right_wheel = pd.read_csv('sessionsdata/wheel1_'+sessid+'.csv')
+    else:
+        raise FileNotFoundError('wheel 1 data not found for session ', sessid)
+    if exists('sessionsdata/wheel2_' + sessid + '.csv'):
+        left_wheel = pd.read_csv('sessionsdata/wheel2_' + sessid + '.csv')
+    else:
+        raise FileNotFoundError('wheel 2 data not found for session ', sessid)
+
+    wheel_dict = {}
+    for side, w_data in zip(['right', 'left'], [right_wheel, left_wheel]):
+        w_data.rename(columns={'time_in_session': 'Time'}, inplace=True)
+        wheel_dict[side] = w_data
+    return wheel_dict
+
+
 def discriminate_behaviours(behaviors, positions):
     behavior_fr = 30
     for behavior in behaviors:
@@ -188,6 +208,7 @@ def make_videos_dicts():
             bhv = discriminate_behaviours(bhv, pos)
         except FileNotFoundError:
             pos = None
+        wheel_data = get_wheel_data(id)
         mv_file = get_movie_file(l)
         video_dict = {'id': id,
                       'movie_file': mv_file,
