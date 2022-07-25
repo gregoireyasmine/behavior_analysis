@@ -400,6 +400,8 @@ def angular_speeds_hist(videos='12345'):
             angular_speeds[side].append(list(speed[side]))
     bins = 10
     for side in angular_speeds.keys():
+        if type(bins) == np.ndarray:
+            bins = list(bins)
         h, bins = np.histogram(angular_speeds[side], bins=bins)
         angular_speeds[side] = h
     return bins, angular_speeds
