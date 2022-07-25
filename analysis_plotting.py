@@ -381,7 +381,7 @@ def markov_1(ax, videos='12345'):
 
 
 def compute_angular_speeds(video: str):
-    video_dict = np.load('data_video_' + n + '.npz', allow_pickle=True)
+    video_dict = np.load('data_video_' + video + '.npz', allow_pickle=True)
     wheel_data = video_dict['wheel_data'].item()
     angular_speed_df = pd.DataFrame()
     for side in 'right', 'left':
