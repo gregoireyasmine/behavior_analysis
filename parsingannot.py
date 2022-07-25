@@ -217,7 +217,8 @@ def make_videos_dicts():
                       'annot_end': a_end,
                       'threshold_change': tc,
                       'behavior_data': bhv,
-                      'pos_data': pos}
+                      'pos_data': pos,
+                      'wheel_data': wheel_data}
         np.savez('data_video_' + str(n), **video_dict)
 
 
