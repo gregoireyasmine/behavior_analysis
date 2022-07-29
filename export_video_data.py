@@ -5,7 +5,7 @@ from os import listdir
 from parsingannot import *
 import shutil
 
-
+'''
 # As long as you have cloned the aeon_mecha_de folder into
 # repos in your home filter
 sys.path.append(expanduser('~/repos/aeon_mecha_de'))
@@ -62,18 +62,19 @@ def exportDataToCSV(limit=1e6):
             return
         else:
             done += 1
+'''
 
-
-dest = '/home/gregoiredy/mnt/delab/data/arena0.1/socialexperiment0_preprocessed/'
+dest = '/home/gregoiredy/repos/behavior_analysis/sessionsdata/'
 config_path = '/home/gregoiredy/dlc_out_for_gregoire/dlc_project/config.yaml'
 
 
-for n in '12345':
+for n in '2':
     video_path = '/home/gregoiredy/to_annotate/video' + str(n) + '/'
     filename = np.load('data_video_' + str(n) + '.npz')['movie_file'].item()
     filename = filename.split('/')[-1]
     filename = filename.split(' ')[0]
     deeplabcut.analyze_videos(config_path, [video_path + filename], save_as_csv=True, destfolder=dest)
-    shutil.copyfile(dest + filename + '_position.csv', 'sessionsdata/')
+
+
 
 

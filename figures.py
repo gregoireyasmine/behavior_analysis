@@ -22,7 +22,6 @@ mpl.rcParams['ytick.labelcolor'] = '#000000'
 mpl.rcParams['axes.labelcolor'] = '#000000'
 mpl.rcParams['axes.titleweight'] = 'bold'
 
-
 ###  FIG 1 : basic data analysis
 
 fig, ax = plt.subplot_mosaic([['total_durations', 'variability'], ['mean_duration', 'frequency']], figsize=(20, 11))
@@ -35,23 +34,43 @@ subplot_frequencies(ax['frequency'])
 titles = ['A', 'B', 'C', 'D']
 xs = [-0.6, -0.05, -0.05, -0.05]
 for i, axx in enumerate(ax):
-    ax[axx].set_title(label = titles[i], loc = 'left', y=1.05, x=xs[i])
+    ax[axx].set_title(label=titles[i], loc='left', y=1.05, x=xs[i])
 plt.tight_layout()
 plt.savefig('basic_data_analysis')
+plt.close(fig)
 
 ### FIG 2 : behaviour evolution (tc)
 
-fig, ax = plt.subplot_mosaic([['tc_triggered', 'behavioral_curve']], figsize = (13, 8))
+fig, ax = plt.subplot_mosaic([['tc_triggered', 'behavioral_curve']], figsize=(13, 8))
 tctd_subplot(ax['tc_triggered'])
 tc_behavioral_curve(ax['behavioral_curve'])
 plt.tight_layout()
 plt.savefig('tc analysis')
-
+plt.close(fig)
 
 ### FIG3 : plotting some markov chains
 
 
+### FIG4 : comparing wheel activation, tracking and behavioral data
 
+fig, ax = plt.subplots(1, 2)
+# bars, labels = plot_behavior_vs_wheel_data(videos='1')
+# np.savez('plot_behavior_vs_wheel_data.npz', **{'bars': bars, 'labels': labels})
+
+plotdict = np.load('plot_behavior_vs_wheel_data.npz', allow_pickle=True)
+bars = plotdict['bars'].item()
+labels = plotdict['labels'].item()
+ax[0].bar([k for k in range(2)], [bars[b][0] for b in ['foraging_vs_exploration', 'other_patch_related']], width=0.8,
+          tick_label=['foraging\nvs exploration', 'other\n(patch related)'], align='edge')
+for i, color in enumerate(['green', 'red']):
+    ax[0].bar([k+i*0.8/3 for k in range(2)], [bars[b][i+1] for b in ['foraging_vs_exploration', 'other_patch_related']],
+              width=0.8/3, align='edge', lw=1, edgecolor='black', color=color)
+ax[1].bar([k for k in range(2)], [bars[b][0] for b in ['separate_foraging', 'other_non_patch_related']], width=0.8,
+          tick_label=['separate\nforaging', 'other\n(non patch related)'], align='edge')
+for i, color in enumerate(['green', 'red', 'yellow']):
+    ax[1].bar([k+i*0.8/3 for k in range(2)], [bars[b][i+1] for b in ['separate_foraging', 'other_non_patch_related']],
+              width=0.8/3, align='edge', lw=1, edgecolor='black', color=color)
+plt.show()
 
 """"
 def plot_characterization(behavior):
@@ -124,4 +143,3 @@ for behavior in behaviors:
     plot_characterization(behavior)
 
 '''
-

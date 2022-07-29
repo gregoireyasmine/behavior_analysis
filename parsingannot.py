@@ -1,7 +1,10 @@
+from typing import Any
+
 import numpy as np
 import pandas as pd
 from os import listdir
 from os.path import exists
+
 pos_data_dir = '/home/gregoiredy/mnt/delab/data/arena0.1/socialexperiment0_preprocessed/'
 
 
@@ -18,7 +21,7 @@ def get_annot_framerate(annot):
     char = 0
     while char < len(annot_framerate_line) and annot_framerate_line[char] != ':':
         char += 1
-    return float(annot_framerate_line[char+2:])
+    return float(annot_framerate_line[char + 2:])
 
 
 def get_annot_start_time(annot):
@@ -26,7 +29,7 @@ def get_annot_start_time(annot):
     char = 0
     while char < len(annot_start_time_line) and annot_start_time_line[char] != ':':
         char += 1
-    return float(annot_start_time_line[char+2:])
+    return float(annot_start_time_line[char + 2:])
 
 
 def get_annot_end_time(annot):
@@ -38,41 +41,41 @@ def get_annot_end_time(annot):
 
 
 def behavior_parser(annot):
-    l = 0  # line count
+    lin: int = 0  # line count
     behaviors = {}
-    while l < len(annot):
-        if annot[l][0] == '>':
-            behavior = annot[l][1:-1]
+    while lin < len(annot):
+        if annot[lin][0] == '>':
+            behavior = annot[lin][1:-1]
             behavior_starts = []
             behavior_ends = []
             behavior_durations = []
-            l += 2
-            while len(annot[l]) > 1:
+            lin += 2
+            while len(annot[lin]) > 1:
                 char = 0
                 start = ''
                 end = ''
                 duration = ''
-                while annot[l][char] in '1234567890':
-                    start += annot[l][char]
+                while annot[lin][char] in '1234567890':
+                    start += annot[lin][char]
                     char += 1
                 char += 1
-                while annot[l][char] in '1234567890':
-                    end += annot[l][char]
+                while annot[lin][char] in '1234567890':
+                    end += annot[lin][char]
                     char += 1
                 char += 1
-                while annot[l][char] in '1234567890':
-                    duration += annot[l][char]
+                while annot[lin][char] in '1234567890':
+                    duration += annot[lin][char]
                     char += 1
-                    if char == len(annot[l]):
+                    if char == len(annot[lin]):
                         break
                 behavior_starts.append(float(start))
                 behavior_ends.append(float(end))
                 behavior_durations.append(float(duration))
-                l += 1
-            l += 1
+                lin += 1
+            lin += 1
             behaviors[behavior] = {'start': behavior_starts, 'end': behavior_ends, 'duration': behavior_durations}
         else:
-            l += 1
+            lin += 1
     return behaviors
 
 
@@ -107,7 +110,14 @@ def get_threshold_change(sessid):
         return None
 
 
-def get_positions(sessid):
+def get_positions(sessid):  # TODO : fix this
+    if sessid == 'BAA-1100704:BAA-1100706_2022-02-09T08:59:17':
+        positions = pd.read_csv('sessionsdata/' + 'FrameTop_2022-02-09T09-00-00_position.csv')
+        offset = 43
+        positions.rename(columns={'Unnamed: 0': 'frame'}, inplace=True)
+        positions = positions.assign(Time=positions.frame / 50 + offset)
+        return positions
+
     datetime = pd.to_datetime(sessid.split('_')[1], utc=True)
     pos_csv = []
     for directory in listdir('sessionsdata/'):
@@ -123,18 +133,16 @@ def get_positions(sessid):
     else:
         file = pos_csv[0]
         datetimef = pd.to_datetime(file.split('_')[1], utc=True)
-        positions = pd.read_csv('sessionsdata/'+file)
+        positions = pd.read_csv('sessionsdata/' + file)
         offset = (datetimef - datetime).total_seconds()
         positions.rename(columns={'Unnamed: 0': 'frame'}, inplace=True)
-        positions = positions.assign(Time=positions.frame/50 + offset)   # timestamp
+        positions = positions.assign(Time=positions.frame / 50 + offset)  # timestamp
         return positions
 
 
 def get_wheel_data(sessid):
-    datetime = pd.to_datetime(sessid.split('_')[1], utc=True)
-
-    if exists('sessionsdata/wheel1_'+sessid+'.csv'):
-        right_wheel = pd.read_csv('sessionsdata/wheel1_'+sessid+'.csv')
+    if exists('sessionsdata/wheel1_' + sessid + '.csv'):
+        right_wheel = pd.read_csv('sessionsdata/wheel1_' + sessid + '.csv')
     else:
         raise FileNotFoundError('wheel 1 data not found for session ', sessid)
     if exists('sessionsdata/wheel2_' + sessid + '.csv'):
@@ -163,7 +171,7 @@ def discriminate_behaviours(behaviors, positions):
                     ind, patch = None, None
                 else:
                     end = behaviors[behavior]['end'][i]
-                    endt = end/behavior_fr
+                    endt = end / behavior_fr
                     pos = positions.iloc[list((startt <= positions.Time) & (positions.Time <= endt))]
 
                     ind1_dist_to_patches = [(pos.ind1_nose_x.mean() - pos.single_right_wheel_x.mean()) ** 2
@@ -195,21 +203,22 @@ def discriminate_behaviours(behaviors, positions):
 def make_videos_dicts():
     for n in '123456':
         f = open('annot_files/mouse1_session1_00' + n + '.annot', mode='r', encoding="utf-8-sig")
-        l = f.readlines()
+        lines = f.readlines()
         f.close()
-        bhv = behavior_parser(l)
-        fr = get_annot_framerate(l)
-        a_start = get_annot_start_time(l)
-        a_end = get_annot_end_time(l)
-        id = get_sessid(l)
+        bhv = behavior_parser(lines)
+        fr = get_annot_framerate(lines)
+        a_start = get_annot_start_time(lines)
+        a_end = get_annot_end_time(lines)
+        id = get_sessid(lines)
         tc = get_threshold_change(id)
         try:
             pos = get_positions(id)
             bhv = discriminate_behaviours(bhv, pos)
         except FileNotFoundError:
+            print('pos data not found for video ', n)
             pos = None
         wheel_data = get_wheel_data(id)
-        mv_file = get_movie_file(l)
+        mv_file = get_movie_file(lines)
         video_dict = {'id': id,
                       'movie_file': mv_file,
                       'annot_fr': fr,

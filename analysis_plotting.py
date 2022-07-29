@@ -1,8 +1,14 @@
 import numpy as np
 import pandas as pd
 from scipy.stats import spearmanr
+from scipy.optimize import curve_fit
 from markovchain import MarkovChain
 import matplotlib.pyplot as plt
+from math import sqrt, pi
+from scipy.stats import norm
+
+VERBOSE = 1
+
 
 BEHAVIORS = ['attack', 'close_by', 'direct_competition', 'foraging_vs_exploration',
              'investigation', 'separate_exploration', 'separate_foraging', 'travel_away', 'travel_towards']
@@ -110,6 +116,27 @@ def create_timeline(n_video: str):
             timeline[behavior_start_frame: behavior_end_frame] = behavior
     return time, timeline
 
+
+def create_timeline_v2(n_video: str):
+    video_dict = np.load('data_video_' + n_video + '.npz', allow_pickle=True)
+    behavior_data = video_dict['behavior_data'].item()
+    annot_framerate = video_dict['annot_fr']
+    annot_start = video_dict['annot_start']
+    annot_end = video_dict['annot_end']
+    time = np.arange(start=annot_start, stop=annot_end, step=1 / annot_framerate)
+    timeline = np.empty(np.shape(time), dtype=tuple)
+    for behavior in BEHAVIORS:
+        for k in range(len(behavior_data[behavior]['start'])):
+            behavior_start_frame = int(behavior_data[behavior]['start'][k])
+            behavior_end_frame = int(behavior_data[behavior]['end'][k])
+            if len(behavior_data[behavior].keys()) > 3:
+                individual_close_from_patch = behavior_data[behavior]['individual_close_from_patch'][k]
+                patch = behavior_data[behavior]['patch_of_interest'][k]
+            else:
+                individual_close_from_patch = None
+                patch = None
+            timeline[behavior_start_frame: behavior_end_frame].fill((behavior, individual_close_from_patch, patch))
+    return time, timeline
 
 # mean, std of duration and frequency ##############################################################################
 
@@ -392,35 +419,131 @@ def compute_angular_speeds(video: str):
     return angular_speed_df
 
 
-def angular_speeds_hist(videos='12345'):
-    angular_speeds = {'left': np.array([]), 'right': np.array([])}
+def characterize_angular_speed(videos='12345'):
+    fig, ax = plt.subplots(4, 1)
+    angular_speeds = np.array([])
     for n in videos:
         speed = compute_angular_speeds(n)
-        for side in angular_speeds.keys():
-            np.concatenate((angular_speeds[side], (speed[side])))
-    bin = 10
-    for side in angular_speeds.keys():
-        h, bin_edges = np.histogram(angular_speeds[side], bins=bin)
-        bin = bin_edges
-        angular_speeds[side] = h
-    return bin_edges, angular_speeds
+        for side in ['left', 'right']:
+            angular_speeds = np.concatenate((angular_speeds, (speed[side][1:])))
+    angular_speeds = angular_speeds[np.isfinite(angular_speeds)]
+
+    def gaussian_func(x, m, sigma, c):
+        return 1/(sigma * sqrt(2*pi)) * np.exp(-(x - m) ** 2 / (2 * sigma ** 2)) + c
+
+    bin = 51
+
+    angular_speeds = angular_speeds[np.isfinite(angular_speeds)]
+    x0 = np.linspace(np.min(angular_speeds), np.max(angular_speeds), bin)
+    y0, x0 = np.histogram(angular_speeds, bins=x0, density=True)
+
+    ax[0].step(x0[:-1], y0)
+    ax[0].grid()
+
+    x_fit = x0[x0 < 0]
+    y_fit = y0[x0[:-1] < 0]
+
+    initial_guess = [0, 2, 0]
+    popt, pcov = curve_fit(gaussian_func, x_fit, y_fit, p0=initial_guess)
+    print(popt)
+
+    xplot = np.linspace(np.min(angular_speeds), np.max(angular_speeds), bin)
+    yplot = gaussian_func(xplot, *popt)
+    ax[0].plot(xplot, yplot, ls='--', lw=1.2)
+
+    ax[1].plot(xplot, 1 - norm.cdf(xplot, loc=popt[0], scale=popt[1]) + popt[2])
+
+    ydiff = - yplot[:-1] + y0
+    ax[2].plot(x0[:-1], ydiff)
+    ax[2].grid()
+
+    speed = compute_angular_speeds('1')
+    ax[3].plot(speed['Time'][:50000], speed['left'][:50000], lw=0.4)
+    ax[3].plot([0, speed['Time'][50000]], [12, 12], lw=0.4)
+
+    fig.show()
+    fig.savefig('angular_speeds.png')
+    # an angular speed threshold of 12 seems good to define wheel activation
 
 
-def plot_angular_speeds(videos='12345'):
-    fig, ax = plt.subplots(2, 1)
-    bins, angular_speeds = angular_speeds_hist(videos)
-    for i, side in enumerate(['left', 'right']):
-        ax[i].bar(bins[:-1], angular_speeds[side], align='edge')
-    fig.savefig('angular_speeds')
+def behavior_vs_wheel_activation(time, timeline_v2, angular_speeds, threshold=12):
+    tracking_data_completeness = {bhv: 0 for bhv in ['foraging_vs_exploration', 'direct_competition', 'close_by', 'travel_away', 'travel_towards']}
+    tracking_data_completeness['total'] = 0
+    rw_activation = angular_speeds['right'] > threshold
+    lw_activation = angular_speeds['left'] > threshold
+    act_dict = {1: rw_activation, 2: lw_activation}
+    angular_speeds_bin = angular_speeds['Time'][1] - angular_speeds['Time'][0]
+    timeline_bin = time[1] - time[0]
+    dict = {}
+    for behavior in ['foraging_vs_exploration', 'other_patch_related']:
+        dict[behavior] = {'correct_wheel_activated': 0, 'wrong_wheel_activated': 0, 'total_time': 0}
+    dict['separate_foraging'] = {'both_wheel_activated': 0, 'one_wheel_activated': 0, 'no_wheel_activated': 0,
+                                 'total_time': 0}
+    dict['other_non_patch_related'] = {'both_wheel_activated': 0, 'one_wheel_activated': 0, 'no_wheel_activated': 0, 'total_time': 0}
+    assert timeline_bin > angular_speeds_bin, \
+        'this has been implemented for behavioral data recorded at lower frequency than wheel data '
+    for i, t in enumerate(angular_speeds['Time'][:-1]):
+        times_select = (time >= t) * (time <= angular_speeds['Time'][i+1])
+        behaviors = timeline_v2[times_select]
+        for behavior in behaviors:
+            if behavior is not None:
+                tracking_data_completeness['total'] += 1
+                if behavior[0] in ['foraging_vs_exploration', 'direct_competition', 'close_by', 'travel_towards',
+                                   'travel_away']:
+                    if behavior[0] == 'foraging_vs_exploration':
+                        bhv = behavior[0]
+                    else:
+                        bhv = 'other_patch_related'
+                    try:
+                        dict[bhv]['correct_wheel_activated'] += timeline_bin * act_dict[behavior[2]][i]
+                        dict[bhv]['wrong_wheel_activated'] += timeline_bin * act_dict[3-behavior[2]][i]
+                        dict[bhv]['total_time'] += timeline_bin
+                        tracking_data_completeness[bhv] += 1
+                    except KeyError:
+                        if VERBOSE > 1:
+                            print('no tracking data for behavior ', behavior, ' at time ', t)
+                else:
+                    if behavior[0] == 'separate_foraging':
+                        bhv = 'separate_foraging'
+                    else:
+                        bhv = 'other_non_patch_related'
+                    w_a = ['no_wheel_activated', 'one_wheel_activated', 'both_wheel_activated'][act_dict[1][i]
+                                                                                                + act_dict[2][i]]
+                    dict[bhv][w_a] += timeline_bin
+                    dict[bhv]['total_time'] += timeline_bin
+    if VERBOSE > 0:
+        print('Behavior vs wheel activation data done. Completeness score for DLC-wheel-discrimination: ')
+        for behavior in ['foraging_vs_exploration', 'close_by', 'direct_competition', 'travel_towards', 'travel_away']:
+            print(behavior, 100*tracking_data_completeness[behavior]/tracking_data_completeness['total'], ' % ')
+    return dict
 
 
-def compare_foraging_annot(videos='12345'):
+def plot_behavior_vs_wheel_data(videos='1'):
+    bars = {behavior: np.zeros(3) for behavior in ['foraging_vs_exploration', 'other_patch_related']}
+
+    bars['other_non_patch_related'] = np.zeros(4)
+    bars['separate_foraging'] = np.zeros(4)
+    labels = {behavior: ['total time', 'correct wheel', 'wrong wheel']
+              for behavior in ['foraging vs exploration', 'other (patch related)']}
+    labels['other (non patch related)'] = ['total time', 'no wheel', 'one wheel', 'both wheel']
+    labels['separate foraging'] = labels['other (non patch related)']
+
     for n in videos:
-        time, timeline = create_timeline(n)
-        video_dict = np.load('data_video_' + n + '.npz', allow_pickle=True)
-        wheel_data = video_dict['wheel_data']
+        time, timeline = create_timeline_v2(n)
+        angular_speeds = compute_angular_speeds(n)
+        threshold = 12
+        dict = behavior_vs_wheel_activation(time, timeline, angular_speeds, threshold=threshold)
+        for bhv in bars.keys():
+            bars[bhv][0] += dict[bhv]['total_time']
+            if bhv in ['foraging_vs_exploration', 'other_patch_related']:
+                bars[bhv][1] += dict[bhv]['correct_wheel_activated']
+                bars[bhv][2] += dict[bhv]['wrong_wheel_activated']
+            else:
+                bars[bhv][1] += dict[bhv]['no_wheel_activated']
+                bars[bhv][2] += dict[bhv]['one_wheel_activated']
+                bars[bhv][3] += dict[bhv]['both_wheel_activated']
+    return bars, labels
 
 
-plot_angular_speeds()
-
+characterize_angular_speed()
 
