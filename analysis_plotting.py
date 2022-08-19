@@ -63,7 +63,7 @@ def plot_pie_chart_time_repartition(ax, durations):
     labels = np.char.add(labels, label_time(durations))
     ax.pie(durations, labels=labels[0],
            autopct=lambda pct: label_values(pct),
-           shadow=False, startangle=0, counterclock=False, radius=1.3)
+           shadow=False, startangle=0, counterclock=False, radius=0.8)
 
 
 def time_repart_subplot(ax, videos: str = '12345'):
