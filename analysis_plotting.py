@@ -18,8 +18,8 @@ LABELDICT = {'attack': 'attack', 'close_by': 'close by', 'direct_competition': '
              'separate_exploration': 'separate exploration', 'separate_foraging': 'separate foraging',
              'travel_away': 'travel away', 'travel_towards': 'travel towards'}
 
-BAR_LABELS = ['attack', 'close\nby', 'direct\ncompetition', 'foraging vs\nexploration',
-              'investigation', 'separate\nexploration', 'separate\nforaging', 'travel\naway', 'travel\ntowards']
+BAR_LABELS = ['attack', 'close\nby', 'direct\ncomp.', 'forag.\n vs\nexplor.',
+        'investig.', 'sep.\nexplor.', 'sep.\nforag.', 'travel\naway', 'travel\ntowards']
 
 
 ## Behaviors repartition pie chart ####################################################################################
@@ -63,7 +63,7 @@ def plot_pie_chart_time_repartition(ax, durations):
     labels = np.char.add(labels, label_time(durations))
     ax.pie(durations, labels=labels[0],
            autopct=lambda pct: label_values(pct),
-           shadow=False, startangle=0, counterclock=False, radius=0.8)
+           shadow=False, startangle=0, counterclock=False, radius=1)
 
 
 def time_repart_subplot(ax, videos: str = '12345'):
