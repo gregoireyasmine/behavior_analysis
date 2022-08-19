@@ -8,11 +8,11 @@ from analysis_plotting import *
 from markovchain import MarkovChain
 
 mpl.rcParams['font.family'] = 'Avenir'
-plt.rcParams['font.size'] = 13
-mpl.rcParams['axes.labelsize'] = 12
-mpl.rcParams['xtick.labelsize'] = 10
-mpl.rcParams['ytick.labelsize'] = 10
-mpl.rcParams['legend.fontsize'] = 10
+plt.rcParams['font.size'] = 14
+mpl.rcParams['axes.labelsize'] = 13
+mpl.rcParams['xtick.labelsize'] = 12
+mpl.rcParams['ytick.labelsize'] = 12
+mpl.rcParams['legend.fontsize'] = 12
 mpl.rcParams['text.color'] = '#000000'
 mpl.rcParams['axes.titlecolor'] = '#000000'
 mpl.rcParams['xtick.color'] = '#000000'
@@ -24,7 +24,8 @@ mpl.rcParams['axes.titleweight'] = 'bold'
 
 ###  FIG 1 : basic data analysis
 
-fig, ax = plt.subplot_mosaic([['total_durations', 'variability'], ['mean_duration', 'frequency']], figsize=(20, 11))
+fig, ax = plt.subplot_mosaic([['total_durations', 'variability'], ['mean_duration', 'frequency']], figsize=(20, 14))
+plt.tight_layout()
 BEHAVIORS = ['attack', 'close_by', 'direct_competition', 'foraging_vs_exploration',
              'investigation', 'separate_exploration', 'separate_foraging', 'travel_away', 'travel_towards']
 time_repart_subplot(ax['total_durations'])
