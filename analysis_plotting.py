@@ -5,7 +5,7 @@ from scipy.optimize import curve_fit
 from markovchain import MarkovChain
 import matplotlib.pyplot as plt
 from math import sqrt, pi
-from scipy.stats import norm
+from scipy.stats import norm, wilcoxon
 
 VERBOSE = 1
 
@@ -271,6 +271,37 @@ def tc_behavioral_curve(ax, videos: str = '12345'):
     ax.set_ylabel(ylabel='proportion of competitive behaviours')
     ax.legend(loc='upper left')
 
+
+def tc_delta_bhv(ax, videos: str = '12345'):
+    deltas = {bhv: {'pre': [], 'post': []} for bhv in BEHAVIORS}
+    total_before_tc = 0
+    total_after_tc = 0
+    for n in videos:
+        video_dict = np.load('data_video_' + n + '.npz', allow_pickle=True)
+        time, timeline = create_timeline(n)
+        tc = video_dict['threshold_change'].item()
+        tc_time = tc['changetime']
+        total_before_tc += np.sum(np.isin(timeline[time < tc_time], BEHAVIORS))
+        total_after_tc += np.sum(np.isin(timeline[time > tc_time], BEHAVIORS))
+        for bhv in BEHAVIORS:
+            before_tc_count = np.sum(timeline[time < tc_time] == bhv)
+            after_tc_count = np.sum(timeline[time > tc_time] == bhv)
+            deltas[bhv]['pre'].append(before_tc_count/total_before_tc)
+            deltas[bhv]['post'].append(after_tc_count/total_after_tc)
+    p_val = {}
+    for bhv in BEHAVIORS:
+        stat, p = wilcoxon(deltas[bhv]['pre'], deltas[bhv]['post'])
+        p_val[bhv] = p
+    delta_means = {bhv: np.mean(np.array(deltas[bhv]['post']) - np.array(deltas[bhv]['pre'])) for bhv in BEHAVIORS}
+    x_bars = [k for k in range(len(BEHAVIORS))]
+    width = 0.6
+    y_bars = [delta_means[bhv] for bhv in BEHAVIORS]
+    colorid = [int((p_val[bhv] < 0.1) + (p_val[bhv] < 0.05)) for bhv in BEHAVIORS]
+    color = [p_val[bhv] for bhv in BEHAVIORS]
+    ax.bar([k for k in range(len(BEHAVIORS))], delta_means, tick_label=BAR_LABELS, width=0.6,
+           color='lightblue', edgecolor='black', linewidth=1)
+    ax.set_ylabel('Mean variation of proportion')
+    return p_val
 
 #### markov analysis #################################################################################################
 
