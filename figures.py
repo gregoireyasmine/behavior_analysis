@@ -42,7 +42,8 @@ plt.close(fig)
 
 ### FIG 2 : behaviour evolution (tc)
 
-fig, ax = plt.subplot_mosaic([['tc_triggered', 'behavioral_curve'], ['tc_triggered', 'tc_delta_p']], figsize=(13, 8))
+fig, ax = plt.subplot_mosaic([['tc_triggered', 'behavioral_curve'], ['tc_triggered', 'tc_delta_p']], figsize=(13, 8),
+                             width_ratios=[0.7, 1])
 tctd_subplot(ax['tc_triggered'])
 tc_behavioral_curve(ax['behavioral_curve'])
 tc_delta_bhv(ax['tc_delta_p'])

@@ -300,7 +300,7 @@ def tc_delta_bhv(ax, videos: str = '12345'):
     color = [['lightyellow', 'orange', 'coral'][cid] for cid in colorid]
     ax.bar(x_bars, y_bars, tick_label=BAR_LABELS, width=0.6,
            color=color, edgecolor='black', linewidth=1)
-    ax.set_ylabel('Mean variation of proportion')
+    ax.set_ylabel('mean variation of proportion')
     return p_val
 
 #### markov analysis #################################################################################################
