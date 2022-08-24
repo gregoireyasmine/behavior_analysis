@@ -42,7 +42,7 @@ plt.close(fig)
 
 ### FIG 2 : behaviour evolution (tc)
 gs_kw = dict(width_ratios=[0.7, 1])
-fig, ax = plt.subplot_mosaic([['tc_triggered', 'behavioral_curve'], ['tc_triggered', 'tc_delta_p']], grispec_kw=gs_kw,
+fig, ax = plt.subplot_mosaic([['tc_triggered', 'behavioral_curve'], ['tc_triggered', 'tc_delta_p']], gridspec_kw=gs_kw,
                              figsize=(13, 8))
 tctd_subplot(ax['tc_triggered'])
 tc_behavioral_curve(ax['behavioral_curve'])
