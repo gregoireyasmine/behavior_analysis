@@ -2,7 +2,6 @@ import sys
 from os.path import expanduser, exists
 import deeplabcut
 from os import listdir
-from parsingannot import *
 import shutil
 
 
