@@ -297,9 +297,9 @@ def tc_delta_bhv(ax, videos: str = '12345'):
     width = 0.6
     y_bars = [delta_means[bhv] for bhv in BEHAVIORS]
     colorid = [int((p_val[bhv] < 0.1) + (p_val[bhv] < 0.05)) for bhv in BEHAVIORS]
-    color = [p_val[bhv] for bhv in BEHAVIORS]
-    ax.bar([k for k in range(len(BEHAVIORS))], delta_means, tick_label=BAR_LABELS, width=0.6,
-           color='lightblue', edgecolor='black', linewidth=1)
+    color = [['lightyellow', 'orange', 'coral'][cid] for cid in colorid]
+    ax.bar(x_bars, y_bars, tick_label=BAR_LABELS, width=0.6,
+           color=color, edgecolor='black', linewidth=1)
     ax.set_ylabel('Mean variation of proportion')
     return p_val
 
