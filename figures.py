@@ -71,9 +71,9 @@ for i, color in enumerate(['green', 'red', 'yellow']):
               align='edge', lw=0, edgecolor='black', color=color)
 ax[1].bar([k for k in range(2)], [bars[b][0] for b in ['separate_foraging', 'other_non_patch_related']], width=0.4,
           tick_label=['separate\nforaging', 'other\n(non patch related)'], align='edge')
-for i, color in enumerate(['green', 'red', 'yellow']):
-    ax[1].bar([k for k in range(2)], [bars[b][i+1] for b in ['separate_foraging', 'other_non_patch_related']],
-              bottom=[(i > 0) * bars[b][i] for b in ['separate_foraging', 'other_non_patch_related']],
+for i, color in enumerate(['red', 'yellow']):
+    ax[1].bar([k for k in range(2)], [bars[b][i+2] for b in ['separate_foraging', 'other_non_patch_related']],
+              bottom=[(i > 0) * bars[b][i+1] for b in ['separate_foraging', 'other_non_patch_related']],
               width=0.4, align='edge', lw=0, edgecolor='black', color=color)
     print(color, '  ', [b + '  ' + str(bars[b][i+1]) for b in ['foraging_vs_exploration', 'other_patch_related', 'separate_foraging', 'other_non_patch_related']])
 plt.savefig('bhv_vs_wheel_using_dlc')
