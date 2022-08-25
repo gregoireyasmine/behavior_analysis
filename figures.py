@@ -77,11 +77,12 @@ for i, color in enumerate(['purple', 'yellow']):
               width=0.4, align='center', lw=0, edgecolor='black', color=color)
     print(color, '  ', [b + '  ' + str(bars[b][i+1]) for b in ['foraging_vs_exploration', 'other_patch_related', 'separate_foraging', 'other_non_patch_related']])
 for k in range(2):
-    ax[k].set_ylabel('proportion (%)')
-    ax[k].tick_params(bottom=False)
+    ax[k].set_xticks(False)
     for side in ['top', 'right']:
         ax[k].spines[side].set_visible(False)
-    ax[1].spines['left'].set_visible(False)
+ax[1].spines['left'].set_visible(False)
+ax[0].set_ylabel('proportion (%)')
+ax[1].set_yticks(False, labels=False)
 fig.legend(['no patch activated', 'correct patch (tracking estimation) activated',
             'wrong patch (tracking estimation) activated', 'both patch activated', 'one patch activated'])
 plt.savefig('bhv_vs_wheel_using_dlc')
