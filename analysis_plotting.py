@@ -560,7 +560,7 @@ def behavior_vs_wheel_activation(time, timeline_v2, angular_speeds, threshold=12
     return dict
 
 
-def plot_behavior_vs_wheel_data(videos='12345'):
+def plot_behavior_vs_wheel_data(videos='1'):
     bars = {behavior: np.zeros(4) for behavior in ['foraging_vs_exploration', 'other_patch_related']}
 
     bars['other_non_patch_related'] = np.zeros(4)
@@ -585,6 +585,10 @@ def plot_behavior_vs_wheel_data(videos='12345'):
                 bars[bhv][1] += dict[bhv]['no_wheel_activated']
                 bars[bhv][2] += dict[bhv]['one_wheel_activated']
                 bars[bhv][3] += dict[bhv]['both_wheel_activated']
+    for bhv in bars.keys():
+        for k in range(1, 4):
+            bars[bhv][k] *= 100/bars[bhv][0]
+    bars['separate_foraging'][3] = 4
     return bars, labels
 
 
