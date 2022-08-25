@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from math import sqrt, pi
 from scipy.stats import norm, wilcoxon
 
-VERBOSE = 2
+VERBOSE = 1
 
 BEHAVIORS = ['attack', 'close_by', 'direct_competition', 'foraging_vs_exploration',
              'investigation', 'separate_exploration', 'separate_foraging', 'travel_away', 'travel_towards']
@@ -538,7 +538,8 @@ def behavior_vs_wheel_activation(time, timeline_v2, angular_speeds, threshold=12
                         dict[bhv]['both_wheel_activated'] += timeline_bin * act_dict[behavior[2]][i] * act_dict[3 - behavior[2]][i]
                         dict[bhv]['total_time'] += timeline_bin
                         tracking_data_completeness[bhv] += 1
-                    except KeyError:
+                    except KeyError as err:
+                        print(err)
                         if VERBOSE > 1:
                             print('no tracking data for behavior ', behavior, ' at time ', t)
                 else:
