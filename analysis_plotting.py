@@ -500,8 +500,8 @@ def characterize_angular_speed(videos='12345'):
 
 def behavior_vs_wheel_activation(time, timeline_v2, angular_speeds, threshold=12):
     tracking_data_completeness = {bhv: 0 for bhv in
-                                  ['foraging_vs_exploration', 'direct_competition', 'close_by', 'travel_away',
-                                   'travel_towards']}
+                                  ['foraging_vs_exploration', 'other_patch_related',
+                                   'separate_foraging', 'other_non_patch_related']}
     tracking_data_completeness['total'] = 0
     rw_activation = angular_speeds['right'] > threshold
     lw_activation = angular_speeds['left'] > threshold
@@ -535,7 +535,8 @@ def behavior_vs_wheel_activation(time, timeline_v2, angular_speeds, threshold=12
                                                                 * (1 - act_dict[3 - behavior[2]][i])
                         dict[bhv]['wrong_wheel_activated'] += timeline_bin * act_dict[3 - behavior[2]][i] \
                             * (1 - act_dict[behavior[2]][i])
-                        dict[bhv]['both_wheel_activated'] += timeline_bin * act_dict[behavior[2]][i] * act_dict[3 - behavior[2]][i]
+                        dict[bhv]['both_wheel_activated'] += timeline_bin * act_dict[behavior[2]][i] \
+                                                             * act_dict[3 - behavior[2]][i]
                         dict[bhv]['total_time'] += timeline_bin
                         tracking_data_completeness[bhv] += 1
                     except KeyError as err:
