@@ -200,14 +200,9 @@ def discriminate_behaviours(behaviors, positions):
     return behaviors
 
 
-data_path = '/nfs/nhome/live/gydegobert/repos/RL_models/dlcdata/'
-ROI_distance_quotient = 0.17
-sessions = listdir(data_path)
-dict = {}
-
 def get_occupancy(pos):
+
     ROI_distance_quotient = 0.17
-    dict = {}
 
     def belong_to_circle(ptx, pty, cx, cy, radius):
         """ Returns if a point belongs to a circle. """
