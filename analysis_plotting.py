@@ -9,7 +9,6 @@ from scipy.stats import norm, wilcoxon
 
 VERBOSE = 1
 
-
 BEHAVIORS = ['attack', 'close_by', 'direct_competition', 'foraging_vs_exploration',
              'investigation', 'separate_exploration', 'separate_foraging', 'travel_away', 'travel_towards']
 
@@ -19,7 +18,7 @@ LABELDICT = {'attack': 'attack', 'close_by': 'close by', 'direct_competition': '
              'travel_away': 'travel away', 'travel_towards': 'travel towards'}
 
 BAR_LABELS = ['attack', 'close\nby', 'direct\ncomp.', 'forag.\n vs\nexplor.',
-        'investig.', 'sep.\nexplor.', 'sep.\nforag.', 'travel\naway', 'travel\ntowards']
+              'investig.', 'sep.\nexplor.', 'sep.\nforag.', 'travel\naway', 'travel\ntowards']
 
 
 ## Behaviors repartition pie chart ####################################################################################
@@ -137,6 +136,7 @@ def create_timeline_v2(n_video: str):
                 patch = None
             timeline[behavior_start_frame: behavior_end_frame].fill((behavior, individual_close_from_patch, patch))
     return time, timeline
+
 
 # mean, std of duration and frequency ##############################################################################
 
@@ -286,8 +286,8 @@ def tc_delta_bhv(ax, videos: str = '12345'):
         for bhv in BEHAVIORS:
             before_tc_count = np.sum(timeline[time < tc_time] == bhv)
             after_tc_count = np.sum(timeline[time > tc_time] == bhv)
-            deltas[bhv]['pre'].append(before_tc_count/total_before_tc)
-            deltas[bhv]['post'].append(after_tc_count/total_after_tc)
+            deltas[bhv]['pre'].append(before_tc_count / total_before_tc)
+            deltas[bhv]['post'].append(after_tc_count / total_after_tc)
     p_val = {}
     for bhv in BEHAVIORS:
         stat, p = wilcoxon(deltas[bhv]['pre'], deltas[bhv]['post'])
@@ -302,6 +302,7 @@ def tc_delta_bhv(ax, videos: str = '12345'):
            color=color, edgecolor='black', linewidth=1)
     ax.set_ylabel('mean variation of proportion')
     return p_val
+
 
 #### markov analysis #################################################################################################
 
@@ -446,7 +447,7 @@ def compute_angular_speeds(video: str):
         if len(angular_speed_df) == 0:
             angular_speed_df['Time'] = wheel_data[side]['Time']
         delta_theta = wheel_data[side].diff()
-        angular_speed_df[side] = delta_theta['angle']/delta_theta['Time']
+        angular_speed_df[side] = delta_theta['angle'] / delta_theta['Time']
     return angular_speed_df
 
 
@@ -460,7 +461,7 @@ def characterize_angular_speed(videos='12345'):
     angular_speeds = angular_speeds[np.isfinite(angular_speeds)]
 
     def gaussian_func(x, m, sigma, c):
-        return 1/(sigma * sqrt(2*pi)) * np.exp(-(x - m) ** 2 / (2 * sigma ** 2)) + c
+        return 1 / (sigma * sqrt(2 * pi)) * np.exp(-(x - m) ** 2 / (2 * sigma ** 2)) + c
 
     bin = 51
 
@@ -498,7 +499,9 @@ def characterize_angular_speed(videos='12345'):
 
 
 def behavior_vs_wheel_activation(time, timeline_v2, angular_speeds, threshold=12):
-    tracking_data_completeness = {bhv: 0 for bhv in ['foraging_vs_exploration', 'direct_competition', 'close_by', 'travel_away', 'travel_towards']}
+    tracking_data_completeness = {bhv: 0 for bhv in
+                                  ['foraging_vs_exploration', 'direct_competition', 'close_by', 'travel_away',
+                                   'travel_towards']}
     tracking_data_completeness['total'] = 0
     rw_activation = angular_speeds['right'] > threshold
     lw_activation = angular_speeds['left'] > threshold
@@ -507,14 +510,16 @@ def behavior_vs_wheel_activation(time, timeline_v2, angular_speeds, threshold=12
     timeline_bin = time[1] - time[0]
     dict = {}
     for behavior in ['foraging_vs_exploration', 'other_patch_related']:
-        dict[behavior] = {'correct_wheel_activated': 0, 'wrong_wheel_activated': 0, 'total_time': 0}
+        dict[behavior] = {'both wheel activated': 0, 'correct_wheel_activated': 0, 'wrong_wheel_activated': 0,
+                          'total_time': 0}
     dict['separate_foraging'] = {'both_wheel_activated': 0, 'one_wheel_activated': 0, 'no_wheel_activated': 0,
                                  'total_time': 0}
-    dict['other_non_patch_related'] = {'both_wheel_activated': 0, 'one_wheel_activated': 0, 'no_wheel_activated': 0, 'total_time': 0}
+    dict['other_non_patch_related'] = {'both_wheel_activated': 0, 'one_wheel_activated': 0, 'no_wheel_activated': 0,
+                                       'total_time': 0}
     assert timeline_bin > angular_speeds_bin, \
         'this has been implemented for behavioral data recorded at lower frequency than wheel data '
     for i, t in enumerate(angular_speeds['Time'][:-1]):
-        times_select = (time >= t) * (time <= angular_speeds['Time'][i+1])
+        times_select = (time >= t) * (time <= angular_speeds['Time'][i + 1])
         behaviors = timeline_v2[times_select]
         for behavior in behaviors:
             if behavior is not None:
@@ -526,8 +531,11 @@ def behavior_vs_wheel_activation(time, timeline_v2, angular_speeds, threshold=12
                     else:
                         bhv = 'other_patch_related'
                     try:
-                        dict[bhv]['correct_wheel_activated'] += timeline_bin * act_dict[behavior[2]][i]
-                        dict[bhv]['wrong_wheel_activated'] += timeline_bin * act_dict[3-behavior[2]][i]
+                        dict[bhv]['correct_wheel_activated'] += timeline_bin * act_dict[behavior[2]][i] \
+                                                                * (1 - act_dict[3 - behavior[2]][i])
+                        dict[bhv]['wrong_wheel_activated'] += timeline_bin * act_dict[3 - behavior[2]][i] \
+                            * (1 - act_dict[behavior[2]][i])
+                        dict[bhv]['both_wheel_activated'] += timeline_bin * act_dict[behavior[2]][i] * act_dict[3 - behavior[2]][i]
                         dict[bhv]['total_time'] += timeline_bin
                         tracking_data_completeness[bhv] += 1
                     except KeyError:
@@ -545,7 +553,7 @@ def behavior_vs_wheel_activation(time, timeline_v2, angular_speeds, threshold=12
     if VERBOSE > 0:
         print('Behavior vs wheel activation data done. Completeness score for DLC-wheel-discrimination: ')
         for behavior in ['foraging_vs_exploration', 'close_by', 'direct_competition', 'travel_towards', 'travel_away']:
-            print(behavior, 100*tracking_data_completeness[behavior]/tracking_data_completeness['total'], ' % ')
+            print(behavior, 100 * tracking_data_completeness[behavior] / tracking_data_completeness['total'], ' % ')
     return dict
 
 
@@ -577,4 +585,3 @@ def plot_behavior_vs_wheel_data(videos='1'):
 
 
 characterize_angular_speed()
-
