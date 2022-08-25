@@ -63,17 +63,19 @@ np.savez('plot_behavior_vs_wheel_data.npz', **{'bars': bars, 'labels': labels})
 plotdict = np.load('plot_behavior_vs_wheel_data.npz', allow_pickle=True)
 bars = plotdict['bars'].item()
 labels = plotdict['labels'].item()
-ax[0].bar([k for k in range(2)], [bars[b][0] for b in ['foraging_vs_exploration', 'other_patch_related']], width=0.8,
+ax[0].bar([k for k in range(2)], [bars[b][0] for b in ['foraging_vs_exploration', 'other_patch_related']], width=0.4,
           tick_label=['foraging\nvs exploration', 'other\n(patch related)'], align='edge')
 for i, color in enumerate(['green', 'red']):
-    ax[0].bar([k+i*0.8/3 for k in range(2)], [bars[b][i+1] for b in ['foraging_vs_exploration', 'other_patch_related']],
-              width=0.8/3, align='edge', lw=1, edgecolor='black', color=color)
-ax[1].bar([k for k in range(2)], [bars[b][0] for b in ['separate_foraging', 'other_non_patch_related']], width=0.8,
+    ax[0].bar([k for k in range(2)], [bars[b][i+1] for b in ['foraging_vs_exploration', 'other_patch_related']],
+              width=0.4, bottom=i * [bars[b][1] for b in ['foraging_vs_exploration', 'other_patch_related']],
+              align='edge', lw=0, edgecolor='black', color=color)
+ax[1].bar([k for k in range(2)], [bars[b][0] for b in ['separate_foraging', 'other_non_patch_related']], width=0.4,
           tick_label=['separate\nforaging', 'other\n(non patch related)'], align='edge')
 for i, color in enumerate(['green', 'red', 'yellow']):
-    ax[1].bar([k+i*0.8/3 for k in range(2)], [bars[b][i+1] for b in ['separate_foraging', 'other_non_patch_related']],
-              width=0.8/3, align='edge', lw=1, edgecolor='black', color=color)
-plt.savefig('bhvvswheelvsdlc')
+    ax[1].bar([k for k in range(2)], [bars[b][i+1] for b in ['separate_foraging', 'other_non_patch_related']],
+              bottom=i * [bars[b][1] for b in ['separate_foraging', 'other_non_patch_related']],
+              width=0.4, align='edge', lw=0, edgecolor='black', color=color)
+plt.savefig('bhv_vs_wheel_using_dlc')
 
 """"
 def plot_characterization(behavior):

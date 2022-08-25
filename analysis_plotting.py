@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from math import sqrt, pi
 from scipy.stats import norm, wilcoxon
 
-VERBOSE = 1
+VERBOSE = 2
 
 BEHAVIORS = ['attack', 'close_by', 'direct_competition', 'foraging_vs_exploration',
              'investigation', 'separate_exploration', 'separate_foraging', 'travel_away', 'travel_towards']
