@@ -554,13 +554,14 @@ def behavior_vs_wheel_activation(time, timeline_v2, angular_speeds, threshold=12
                     dict[bhv]['total_time'] += timeline_bin
     if VERBOSE > 0:
         print('Behavior vs wheel activation data done. Completeness score for DLC-wheel-discrimination: ')
-        for behavior in ['foraging_vs_exploration', 'close_by', 'direct_competition', 'travel_towards', 'travel_away']:
+        for behavior in ['foraging_vs_exploration', 'other_patch_related',
+                         'separate_foraging', 'other_non_patch_related']:
             print(behavior, 100 * tracking_data_completeness[behavior] / tracking_data_completeness['total'], ' % ')
     return dict
 
 
 def plot_behavior_vs_wheel_data(videos='1'):
-    bars = {behavior: np.zeros(3) for behavior in ['foraging_vs_exploration', 'other_patch_related']}
+    bars = {behavior: np.zeros(4) for behavior in ['foraging_vs_exploration', 'other_patch_related']}
 
     bars['other_non_patch_related'] = np.zeros(4)
     bars['separate_foraging'] = np.zeros(4)
@@ -579,6 +580,7 @@ def plot_behavior_vs_wheel_data(videos='1'):
             if bhv in ['foraging_vs_exploration', 'other_patch_related']:
                 bars[bhv][1] += dict[bhv]['correct_wheel_activated']
                 bars[bhv][2] += dict[bhv]['wrong_wheel_activated']
+                bars[bhv][3] += dict[bhv]['both_wheel_activated']
             else:
                 bars[bhv][1] += dict[bhv]['no_wheel_activated']
                 bars[bhv][2] += dict[bhv]['one_wheel_activated']
