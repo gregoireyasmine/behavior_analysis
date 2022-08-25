@@ -65,15 +65,15 @@ bars = plotdict['bars'].item()
 labels = plotdict['labels'].item()
 ax[0].bar([k for k in range(2)], [bars[b][0] for b in ['foraging_vs_exploration', 'other_patch_related']], width=0.4,
           tick_label=['foraging\nvs exploration', 'other\n(patch related)'], align='edge')
-for i, color in enumerate(['green', 'red']):
+for i, color in enumerate(['green', 'red', 'yellow']):
     ax[0].bar([k for k in range(2)], [bars[b][i+1] for b in ['foraging_vs_exploration', 'other_patch_related']],
-              width=0.4, bottom=[i*bars[b][1] for b in ['foraging_vs_exploration', 'other_patch_related']],
+              width=0.4, bottom=[(i > 0)*bars[b][1] for b in ['foraging_vs_exploration', 'other_patch_related']],
               align='edge', lw=0, edgecolor='black', color=color)
 ax[1].bar([k for k in range(2)], [bars[b][0] for b in ['separate_foraging', 'other_non_patch_related']], width=0.4,
           tick_label=['separate\nforaging', 'other\n(non patch related)'], align='edge')
 for i, color in enumerate(['green', 'red', 'yellow']):
     ax[1].bar([k for k in range(2)], [bars[b][i+1] for b in ['separate_foraging', 'other_non_patch_related']],
-              bottom=[i * bars[b][1] for b in ['separate_foraging', 'other_non_patch_related']],
+              bottom=[(i > 0) * bars[b][1] for b in ['separate_foraging', 'other_non_patch_related']],
               width=0.4, align='edge', lw=0, edgecolor='black', color=color)
 plt.savefig('bhv_vs_wheel_using_dlc')
 
