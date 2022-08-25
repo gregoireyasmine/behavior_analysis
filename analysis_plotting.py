@@ -560,7 +560,7 @@ def behavior_vs_wheel_activation(time, timeline_v2, angular_speeds, threshold=12
     return dict
 
 
-def plot_behavior_vs_wheel_data(videos='1'):
+def plot_behavior_vs_wheel_data(videos='12345'):
     bars = {behavior: np.zeros(4) for behavior in ['foraging_vs_exploration', 'other_patch_related']}
 
     bars['other_non_patch_related'] = np.zeros(4)
