@@ -57,8 +57,8 @@ plt.close(fig)
 ### FIG4 : comparing wheel activation, tracking and behavioral data
 
 fig, ax = plt.subplots(1, 2, figsize=(18, 10))
-# bars, labels = plot_behavior_vs_wheel_data(videos='1')
-# np.savez('plot_behavior_vs_wheel_data.npz', **{'bars': bars, 'labels': labels})
+bars, labels = plot_behavior_vs_wheel_data(videos='1')
+np.savez('plot_behavior_vs_wheel_data.npz', **{'bars': bars, 'labels': labels})
 
 plotdict = np.load('plot_behavior_vs_wheel_data.npz', allow_pickle=True)
 bars = plotdict['bars'].item()
