@@ -229,7 +229,7 @@ def get_occupancy(pos):
         distance_between_patches = sqrt((rwx - lwx)**2 + (rwy - lwy)**2)
         patch_radius = ROI_distance_quotient * distance_between_patches
 
-        for i, frame in enumerate(pos.iteruples()):
+        for i, frame in enumerate(pos.itertuples()):
             x = frame.ind1_nose_x
             y = frame.ind1_nose_y
             if x and y:
