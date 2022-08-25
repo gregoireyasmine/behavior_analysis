@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from os import listdir
 from os.path import exists
-
+from math import sqrt
 pos_data_dir = '/home/gregoiredy/mnt/delab/data/arena0.1/socialexperiment0_preprocessed/'
 
 
@@ -226,15 +226,15 @@ def get_occupancy(pos):
         rwx, rwy, lwx, lwy = None, None, None, None
         frame = 0
         while sum([type(w) == np.float64 for w in (rwx, rwy, lwx, lwy)]) != 4:
-            rwx =
-            rwy =
-            lwx =
-            lwy =
+            rwx = pos.single_right_wheel_x[frame]
+            rwy = pos.single_right_wheel_y[frame]
+            lwx = pos.single_left_wheel_x[frame]
+            lwy = pos.single_left_wheel_y[frame]
             frame += 1
         distance_between_patches = sqrt((rwx - lwx)**2 + (rwy - lwy)**2)
         patch_radius = ROI_distance_quotient * distance_between_patches
 
-        for i, frame in enumerate(sessdf.itertuples()):
+        for i, frame in enumerate(pos.iteruples()):
             x = frame.ind1_nose_x
             y = frame.ind1_nose_y
             if x and y:
@@ -242,7 +242,11 @@ def get_occupancy(pos):
             else:
                 patch_occupied = None
             df = pd.concat([df, pd.DataFrame({'frame': i, 'patch_occupied': patch_occupied}, index=[0])], ignore_index=True)
-        np.save('./dlcdata/occupancy_DLC_' + sess + '.npz', df)
+    except Exception as err:
+        print(err)
+    finally:
+        return df
+
 
 def make_videos_dicts():
     for n in '123456':
@@ -261,6 +265,8 @@ def make_videos_dicts():
         except FileNotFoundError:
             print('pos data not found for video ', n)
             pos = None
+        if pos is not None:
+            occupancy = get_occupancy(pos)
         wheel_data = get_wheel_data(id)
         mv_file = get_movie_file(lines)
         video_dict = {'id': id,
@@ -271,7 +277,8 @@ def make_videos_dicts():
                       'threshold_change': tc,
                       'behavior_data': bhv,
                       'pos_data': pos,
-                      'wheel_data': wheel_data}
+                      'wheel_data': wheel_data,
+                      'occupancy': occupancy}
         np.savez('data_video_' + str(n), **video_dict)
 
 
