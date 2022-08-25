@@ -73,7 +73,7 @@ ax[1].bar([k for k in range(2)], [bars[b][0] for b in ['separate_foraging', 'oth
 for i, color in enumerate(['green', 'red', 'yellow']):
     ax[1].bar([k+i*0.8/3 for k in range(2)], [bars[b][i+1] for b in ['separate_foraging', 'other_non_patch_related']],
               width=0.8/3, align='edge', lw=1, edgecolor='black', color=color)
-plt.show()
+plt.savefig('bhvvswheelvsdlc')
 
 """"
 def plot_characterization(behavior):
