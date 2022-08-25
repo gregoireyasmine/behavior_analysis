@@ -57,8 +57,8 @@ plt.close(fig)
 ### FIG4 : comparing wheel activation, tracking and behavioral data
 
 fig, ax = plt.subplots(1, 2, figsize=(18, 10))
-bars, labels = plot_behavior_vs_wheel_data(videos='1')
-np.savez('plot_behavior_vs_wheel_data.npz', **{'bars': bars, 'labels': labels})
+# bars, labels = plot_behavior_vs_wheel_data(videos='1')
+# np.savez('plot_behavior_vs_wheel_data.npz', **{'bars': bars, 'labels': labels})
 
 plotdict = np.load('plot_behavior_vs_wheel_data.npz', allow_pickle=True)
 bars = plotdict['bars'].item()
@@ -73,7 +73,7 @@ ax[1].bar([k for k in range(2)], [bars[b][0] for b in ['separate_foraging', 'oth
           tick_label=['separate\nforaging', 'other\n(non patch related)'], align='edge')
 for i, color in enumerate(['green', 'red', 'yellow']):
     ax[1].bar([k for k in range(2)], [bars[b][i+1] for b in ['separate_foraging', 'other_non_patch_related']],
-              bottom=i * [bars[b][1] for b in ['separate_foraging', 'other_non_patch_related']],
+              bottom=[i * bars[b][1] for b in ['separate_foraging', 'other_non_patch_related']],
               width=0.4, align='edge', lw=0, edgecolor='black', color=color)
 plt.savefig('bhv_vs_wheel_using_dlc')
 
