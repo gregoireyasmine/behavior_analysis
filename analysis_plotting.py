@@ -510,7 +510,7 @@ def behavior_vs_wheel_activation(time, timeline_v2, angular_speeds, threshold=12
     timeline_bin = time[1] - time[0]
     dict = {}
     for behavior in ['foraging_vs_exploration', 'other_patch_related']:
-        dict[behavior] = {'both wheel activated': 0, 'correct_wheel_activated': 0, 'wrong_wheel_activated': 0,
+        dict[behavior] = {'both_wheel_activated': 0, 'correct_wheel_activated': 0, 'wrong_wheel_activated': 0,
                           'total_time': 0}
     dict['separate_foraging'] = {'both_wheel_activated': 0, 'one_wheel_activated': 0, 'no_wheel_activated': 0,
                                  'total_time': 0}
@@ -539,8 +539,8 @@ def behavior_vs_wheel_activation(time, timeline_v2, angular_speeds, threshold=12
                         dict[bhv]['total_time'] += timeline_bin
                         tracking_data_completeness[bhv] += 1
                     except KeyError as err:
-                        print(err)
                         if VERBOSE > 1:
+                            print('Key error: ', err)
                             print('no tracking data for behavior ', behavior, ' at time ', t)
                 else:
                     if behavior[0] == 'separate_foraging':
