@@ -601,7 +601,7 @@ def compare_with_dlc(videos = '1'):
         occ_data = np.load('data_video_'+n+'.npz', allow_pickle=True)['occupancy']
         for i, t in enumerate(time):
             frames = occ_data[:, 0][(occ_data[:, 0] < 50*(t + timeline_bin)) * 50*(occ_data[:, 0]>= t)]
-            b = timeline[i]
+            b = timeline[i][0]
             if b is not None:
                 if b in ['direct_competition', 'close_by', 'travel_towards', 'travel_away']:
                     bhv = 'other_patch_related'
