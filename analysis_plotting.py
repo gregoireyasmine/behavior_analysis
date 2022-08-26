@@ -366,11 +366,18 @@ def prev_behavior_pie_subplot(ax, bhv, videos='12345'):
            shadow=True)
 
 
-def get_markov_matrix(videos='12345', include_same=False):
+def get_markov_matrix(videos='12345', include_same=False, frac=None):
     mm = {bhv: {bh: 0 for bh in BEHAVIORS} for bhv in BEHAVIORS}
     nbcounter = [get_next_behaviors, get_next_behaviors_same_included][include_same]
     for n in videos:
-        _, timeline = create_timeline(n)
+        time, timeline = create_timeline(n)
+        if frac is not None:
+            tc = np.load('data_video_'+n+'.npz', allow_pickle=True)['tc'].item()['changetime']
+            if frac == 'before':
+                timeline = timeline[time < tc]
+            if frac == 'after':
+                timeline = timeline[time > tc]
+
         for bhv in BEHAVIORS:
             nbc = nbcounter(bhv, timeline)
             for bh in nbc.keys():
@@ -409,10 +416,19 @@ def get_transition_probability(mm, state_1, state_2, steps,
     return p
 
 
-def collapse_markov(mm, states_dict: dict, videos='12345'):
+def collapse_markov(mm, states_dict: dict, videos='12345', frac=None):
     """ Collapse markov matrix to states of interest. """
     collapsed_mm = np.zeros((len(states_dict.keys()), len(states_dict.keys())))
-    total_durations = behavior_total_durations(videos)
+    total_durations = [0 for b in BEHAVIORS]
+    for n in videos:
+        time, timeline = create_timeline(n)
+        if frac is not None:
+            tc = np.load('data_video_' + n + '.npz', allow_pickle=True)['tc'].item()['changetime']
+            if frac == 'before':
+                timeline = timeline[time < tc]
+            if frac == 'after':
+                timeline = timeline[time > tc]
+        total_durations += [np.sum(timeline == b) for b in BEHAVIORS]
     for i, s1 in enumerate(states_dict.keys()):
         for j, s2 in enumerate(states_dict.keys()):
             s1_repart = total_durations[np.isin(BEHAVIORS, states_dict[s1])]
@@ -436,7 +452,20 @@ def markov_1(ax, videos='12345'):
     collapsed_mm = collapse_markov(complete_mm, states_dict=states, videos=videos)
     mc = MarkovChain(collapsed_mm,
                      ['social\nforaging', 'travel\ntowards', 'travel\naway', 'non social\nor out of patch'])
-    mc.draw(ax=ax, show=False)
+
+
+def markov_2(ax, videos='12345'):
+    fig, ax = plt.subplots(2)
+    states = {'social_foraging': ['close_by', 'direct_competition'], 'travel_towards': ['travel_towards'],
+              'travel_away': ['travel_away'],
+              'notsocialforaging': ['attack', 'foraging_vs_exploration', 'investigation', 'separate_exploration',
+                                    'separate_foraging']}
+    for k, frac in enumerate(['before', 'after']):
+        complete_mm = get_markov_matrix(videos, include_same=True, frac=frac)
+        collapsed_mm = collapse_markov(complete_mm, states_dict=states, videos=videos, frac=frac)
+        mc = MarkovChain(collapsed_mm,
+                         ['social\nforaging', 'travel\ntowards', 'travel\naway', 'non social\nor out of patch'])
+        mc.draw(ax)
 
 
 def compute_angular_speeds(video: str):
@@ -592,7 +621,7 @@ def plot_behavior_vs_wheel_data(videos='1'):
     return bars, labels
 
 
-def compare_with_dlc(videos = '1'):
+def compare_with_dlc(videos='1'):
     bars = {behavior: np.zeros(4) for behavior in ['foraging_vs_exploration', 'other_patch_related',  'separate_foraging',  'other_non_patch_related']}
     for n in videos:
         time, timeline = create_timeline_v2(n)
@@ -600,6 +629,7 @@ def compare_with_dlc(videos = '1'):
         dlc_bin = 1/50
         occ_data = np.load('data_video_'+n+'.npz', allow_pickle=True)['occupancy']
         for i, t in enumerate(time):
+            print('compare_with_dlc :  ', str(100*i/len(time)), ' %')
             frames = occ_data[:, 0][(occ_data[:, 0] < 50*(t + timeline_bin)) * 50*(occ_data[:, 0]>= t)]
             b = timeline[i]
             if b is not None:

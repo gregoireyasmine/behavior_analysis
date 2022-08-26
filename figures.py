@@ -86,7 +86,7 @@ for k in range(2):
     for side in ['top', 'right']:
         ax[k].spines[side].set_visible(False)
 dlc_lines = []
-for bhv_list, k in enumerate([('foraging_vs_exploration', 'other_patch_related'), ('separate_foraging', 'other_non_patch_related')]):
+for k, bhv_list in enumerate([('foraging_vs_exploration', 'other_patch_related'), ('separate_foraging', 'other_non_patch_related')]):
     line, = ax[k].bar([x + 0.5 for x in range(2)], 2 * [100], bottom=bottom, color='blue', lw=0,
                       hatch='/',
                       width=0.25)
