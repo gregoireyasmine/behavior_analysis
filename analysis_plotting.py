@@ -606,6 +606,8 @@ def compare_with_dlc(videos = '1'):
                 bhv = 'other_patch_related'
             if b in ['attack', 'separate_exploration', 'close_investigation']:
                 bhv = 'other_non_patch_related'
+            else:
+                bhv = b
             same_patch = 0
             one_patch_one_out = 0
             both_patch = 0
