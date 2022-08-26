@@ -629,7 +629,8 @@ def compare_with_dlc(videos='1'):
         dlc_bin = 1/50
         occ_data = np.load('data_video_'+n+'.npz', allow_pickle=True)['occupancy']
         for i, t in enumerate(time):
-            print('compare_with_dlc :  ', str(100*i/len(time)), ' %')
+            if i%5000 == 0:
+                print('compare_with_dlc :  ', str(100*i/len(time)), ' %')
             frames = occ_data[:, 0][(occ_data[:, 0] < 50*(t + timeline_bin)) * 50*(occ_data[:, 0]>= t)]
             b = timeline[i]
             if b is not None:
