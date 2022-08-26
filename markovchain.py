@@ -116,7 +116,7 @@ class MarkovChain:
             y_start + yoffset,
             dx * np.sign(node2.x-node1.x),
             dy * np.sign(node2.y-node1.y),
-            width = self.arrow_width,
+            width = 1*prob,
             head_width = self.arrow_head_width
         )
         p = PatchCollection(
