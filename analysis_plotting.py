@@ -432,7 +432,7 @@ def collapse_markov(mm, states_dict: dict, videos='12345', frac=None):
     for i, s1 in enumerate(states_dict.keys()):
         for j, s2 in enumerate(states_dict.keys()):
             s1_repart = total_durations[np.isin(BEHAVIORS, states_dict[s1])]
-            s1_repart /= sum(s1_repart)
+            s1_repart = np.true_divide(s1_repart, sum(s1_repart), casting='unsafe')
             p_transition = 0
             for k, b1 in enumerate(states_dict[s1]):
                 for b2 in states_dict[s2]:
