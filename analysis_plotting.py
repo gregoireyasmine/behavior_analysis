@@ -606,7 +606,7 @@ def compare_with_dlc(videos = '1'):
                 b = b[0]
                 if b in ['direct_competition', 'close_by', 'travel_towards', 'travel_away']:
                     bhv = 'other_patch_related'
-                if b in ['attack', 'separate_exploration', 'close_investigation']:
+                if b in ['attack', 'separate_exploration', 'investigation']:
                     bhv = 'other_non_patch_related'
                 else:
                     bhv = b
