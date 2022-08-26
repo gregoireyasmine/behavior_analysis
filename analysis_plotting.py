@@ -593,13 +593,38 @@ def plot_behavior_vs_wheel_data(videos='1'):
 
 
 def compare_with_dlc(videos = '1'):
-    bars = {behavior: 0 for behavior in ['foraging_vs_exploration', 'other_patch_related',  'separate_foraging',  'other_non_patch_related']}
+    bars = {behavior: np.zeros(4) for behavior in ['foraging_vs_exploration', 'other_patch_related',  'separate_foraging',  'other_non_patch_related']}
     for n in videos:
         time, timeline = create_timeline_v2(n)
         timeline_bin = time[1] - time[0]
-        occ_data = np.load('data_video_'+n+'.npz')
-        for bhv in bars.keys():
-            if bhv in BEHAVIORS:
-                pass
+        dlc_bin = 1/50
+        occ_data = np.load('data_video_'+n+'.npz', allow_pickle=True)['occ']
+        for i, t in enumerate(time):
+            frames = occ_data[:, 0][(occ_data[:, 0] < 50*(t + timeline_bin)) * 50*(occ_data[:, 0]>= t)]
+            b = timeline[i]
+            if b in ['direct_competition', 'close_by', 'travel_towards', 'travel_away']:
+                bhv = 'other_patch_related'
+            if b in ['attack', 'separate_exploration', 'close_investigation']:
+                bhv = 'other_non_patch_related'
+            same_patch = 0
+            one_patch_one_out = 0
+            both_patch = 0
+            total = 0
+            for fr in frames:
+                total += 1
+                if occ_data[fr, 1] is not None or occ_data[fr, 0] is not None:
+                    if occ_data[fr, 1] == occ_data[fr, 0]:
+                        same_patch += 1
+                    elif occ_data[fr, 0] is None or occ_data[fr, 1] is None:
+                        one_patch_one_out += 1
+                    elif occ_data[fr, 0] != occ_data[fr, 1]:
+                        both_patch += 1
+                    else:
+                        print(occ_data[fr])
+            bars[bhv] += np.array([one_patch_one_out, same_patch, both_patch, total])
+    for bhv in bars.keys():
+        bars[bhv] /= bars[bhv][3]
+    return bars
+
 
 characterize_angular_speed()

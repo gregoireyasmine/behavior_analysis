@@ -62,24 +62,38 @@ fig, ax = plt.subplots(1, 2, figsize=(18, 10))
 
 plotdict = np.load('plot_behavior_vs_wheel_data.npz', allow_pickle=True)
 bars = plotdict['bars'].item()
+dlc_bars = compare_with_dlc('1')
 labels = plotdict['labels'].item()
-ax[0].bar([k for k in range(2)], 2*[100], width=0.4,
-          tick_label=['foraging\nvs exploration', 'other\n(patch related)'], align='center')
+lines = []
+line, = ax[0].bar([k for k in range(2)], 2*[100], width=0.4,
+                  tick_label=['foraging\nvs exploration', 'other\n(patch related)'], align='center')
+lines.append(line)
 for i, color in enumerate(['green', 'red', 'yellow']):
-    ax[0].bar([k for k in range(2)], [bars[b][i+1] for b in ['foraging_vs_exploration', 'other_patch_related']],
+    line, = ax[0].bar([k for k in range(2)], [bars[b][i+1] for b in ['foraging_vs_exploration', 'other_patch_related']],
               width=0.4, bottom=[(i > 0)*bars[b][1] for b in ['foraging_vs_exploration', 'other_patch_related']],
               align='center', lw=0, edgecolor='black', color=color)
-ax[1].bar([k for k in range(2)], 2*[100], width=0.4,
+    lines.append(line)
+line, = ax[1].bar([k for k in range(2)], 2*[100], width=0.4,
           tick_label=['separate\nforaging', 'other\n(non patch related)'], align='center')
+lines.append(line)
 for i, color in enumerate(['purple', 'yellow']):
-    ax[1].bar([k for k in range(2)], [bars[b][i+2] for b in ['separate_foraging', 'other_non_patch_related']],
+    line, = ax[1].bar([k for k in range(2)], [bars[b][i+2] for b in ['separate_foraging', 'other_non_patch_related']],
               bottom=[(i > 0) * bars[b][i+1] for b in ['separate_foraging', 'other_non_patch_related']],
               width=0.4, align='center', lw=0, edgecolor='black', color=color)
-    print(color, '  ', [b + '  ' + str(bars[b][i+1]) for b in ['foraging_vs_exploration', 'other_patch_related', 'separate_foraging', 'other_non_patch_related']])
+    lines.append(line)
 for k in range(2):
     ax[k].tick_params(bottom=False, labelbottom=True)
     for side in ['top', 'right']:
         ax[k].spines[side].set_visible(False)
+dlc_lines = []
+for bhv_list, k in enumerate([('foraging_vs_exploration', 'other_patch_related'), ('separate_foraging', 'other_non_patch_related')]):
+    for i, color in enumerate(['purple', 'orange', 'yellow', 'total']):
+        if i == 0:
+            bottom = None
+        else:
+            bottom = [dlc_bars[b][i-1] for b in bhv_list]
+        line, = ax[k].bar([x+0.5 for x in range(2)], [dlc_bars[b][i] for b in bhv_list], bottom=bottom, color=color, lw=0, hatch='/',
+                          width=0.25)
 ax[1].spines['left'].set_visible(False)
 ax[0].set_ylabel('proportion (%)')
 ax[1].set_yticks([], labels=[])
