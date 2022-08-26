@@ -464,7 +464,7 @@ def markov_2(videos='12345'):
         collapsed_mm = collapse_markov(complete_mm, states_dict=states, videos=videos, frac=frac)
         mc = MarkovChain(collapsed_mm,
                          ['social\nforaging', 'travel\ntowards', 'travel\naway', 'non social\nor out of patch'])
-        mc.draw(img_path='markov_v2.png')
+        mc.draw(img_path='markov_v2.png'+frac)
 
 
 def compute_angular_speeds(video: str):
