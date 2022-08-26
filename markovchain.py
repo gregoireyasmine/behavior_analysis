@@ -43,7 +43,7 @@ class MarkovChain:
         self.text_args = {
             'ha': 'center',
             'va': 'center',
-            'fontsize': 11
+            'fontsize': 10
         }
 
         # Build the network
@@ -68,7 +68,7 @@ class MarkovChain:
             self.ylim = (-3, 3)
             self.node_centers = [[-3,-2], [3,-2], [-3,2]]
         elif self.n_states == 4:
-            self.figsize = (10, 10)
+            self.figsize = (12, 12)
             self.xlim = (-5, 5)
             self.ylim = (-5, 5)
             self.node_centers = [[-4,4], [4,4], [4,-4], [-4,-4]]
