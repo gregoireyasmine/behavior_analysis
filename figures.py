@@ -82,7 +82,7 @@ for k in range(2):
         ax[k].spines[side].set_visible(False)
 ax[1].spines['left'].set_visible(False)
 ax[0].set_ylabel('proportion (%)')
-ax[1].set_yticks(False, labels=False)
+ax[1].set_yticks([], labels=[])
 fig.legend(['no patch activated', 'correct patch (tracking estimation) activated',
             'wrong patch (tracking estimation) activated', 'both patch activated', 'one patch activated'])
 plt.savefig('bhv_vs_wheel_using_dlc')
