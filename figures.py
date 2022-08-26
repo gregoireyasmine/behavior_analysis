@@ -53,6 +53,7 @@ plt.close(fig)
 
 ### FIG3 : plotting some markov chains
 
+markov_2()
 
 ### FIG4 : comparing wheel activation, tracking and behavioral data
 
@@ -97,7 +98,7 @@ for k, bhv_list in enumerate([('foraging_vs_exploration', 'other_patch_related')
         else:
             bottom = [dlc_bars[b][i-1] for b in bhv_list]
         line, = ax[k].bar([x+0.5 for x in range(2)], [dlc_bars[b][i] for b in bhv_list], bottom=bottom, color=color, lw=0, hatch='/',
-                          width=0.25)
+                    width=0.25)
         dlc_lines.append(line)
 ax[1].spines['left'].set_visible(False)
 ax[0].set_ylabel('proportion (%)')

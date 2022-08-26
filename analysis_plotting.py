@@ -454,7 +454,7 @@ def markov_1(ax, videos='12345'):
                      ['social\nforaging', 'travel\ntowards', 'travel\naway', 'non social\nor out of patch'])
 
 
-def markov_2(ax, videos='12345'):
+def markov_2(videos='12345'):
     fig, ax = plt.subplots(2)
     states = {'social_foraging': ['close_by', 'direct_competition'], 'travel_towards': ['travel_towards'],
               'travel_away': ['travel_away'],
@@ -465,7 +465,8 @@ def markov_2(ax, videos='12345'):
         collapsed_mm = collapse_markov(complete_mm, states_dict=states, videos=videos, frac=frac)
         mc = MarkovChain(collapsed_mm,
                          ['social\nforaging', 'travel\ntowards', 'travel\naway', 'non social\nor out of patch'])
-        mc.draw(ax)
+        mc.draw(ax=ax[k])
+    fig.savefig('markov_v2.png')
 
 
 def compute_angular_speeds(video: str):
