@@ -87,18 +87,24 @@ for k in range(2):
         ax[k].spines[side].set_visible(False)
 dlc_lines = []
 for bhv_list, k in enumerate([('foraging_vs_exploration', 'other_patch_related'), ('separate_foraging', 'other_non_patch_related')]):
-    for i, color in enumerate(['purple', 'orange', 'yellow', 'total']):
+    line, = ax[k].bar([x + 0.5 for x in range(2)], 2 * [100], bottom=bottom, color='blue', lw=0,
+                      hatch='/',
+                      width=0.25)
+    dlc_lines.append(line)
+    for i, color in enumerate(['purple', 'orange', 'yellow']):
         if i == 0:
             bottom = None
         else:
             bottom = [dlc_bars[b][i-1] for b in bhv_list]
         line, = ax[k].bar([x+0.5 for x in range(2)], [dlc_bars[b][i] for b in bhv_list], bottom=bottom, color=color, lw=0, hatch='/',
                           width=0.25)
+        dlc_lines.append(line)
 ax[1].spines['left'].set_visible(False)
 ax[0].set_ylabel('proportion (%)')
 ax[1].set_yticks([], labels=[])
-fig.legend(['no patch activated', 'correct patch (tracking estimation) activated',
-            'wrong patch (tracking estimation) activated', 'both patch activated', 'one patch activated'])
+fig.legend([lines[k] for k in [0, 1, 2, 3, 5]]+dlc_lines[:4], ['no patch activated', 'correct patch (tracking estimation) activated',
+            'wrong patch (tracking estimation) activated', 'both patch activated', 'one patch activated', 'no mice on patch',
+                                                           'one mouse on patch, one out', 'two mice on same patch', 'one mice on each patch'])
 plt.savefig('bhv_vs_wheel_using_dlc')
 
 """"
