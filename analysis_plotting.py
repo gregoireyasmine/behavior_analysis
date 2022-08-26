@@ -592,4 +592,14 @@ def plot_behavior_vs_wheel_data(videos='1'):
     return bars, labels
 
 
+def compare_with_dlc(videos = '1'):
+    bars = {behavior: 0 for behavior in ['foraging_vs_exploration', 'other_patch_related',  'separate_foraging',  'other_non_patch_related']}
+    for n in videos:
+        time, timeline = create_timeline_v2(n)
+        timeline_bin = time[1] - time[0]
+        occ_data = np.load('data_video_'+n+'.npz')
+        for bhv in bars.keys():
+            if bhv in BEHAVIORS:
+                pass
+
 characterize_angular_speed()
