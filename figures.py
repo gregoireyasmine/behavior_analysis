@@ -63,7 +63,6 @@ fig, ax = plt.subplots(1, 2, figsize=(18, 10))
 
 plotdict = np.load('plot_behavior_vs_wheel_data.npz', allow_pickle=True)
 bars = plotdict['bars'].item()
-dlc_bars = compare_with_dlc('1')
 labels = plotdict['labels'].item()
 lines = []
 line, = ax[0].bar([k for k in range(2)], 2*[100], width=0.4,
@@ -82,10 +81,10 @@ for i, color in enumerate(['purple', 'yellow']):
               bottom=[(i > 0) * bars[b][i+1] for b in ['separate_foraging', 'other_non_patch_related']],
               width=0.4, align='center', lw=0, edgecolor='black', color=color)
     lines.append(line)
-# for k in range(2):
-#    ax[k].tick_params(bottom=False, labelbottom=True)
-#    for side in ['top', 'right']:
-#        ax[k].spines[side].set_visible(False)
+for k in range(2):
+    ax[k].tick_params(bottom=False, labelbottom=True)
+    for side in ['top', 'right']:
+        ax[k].spines[side].set_visible(False)
 # dlc_lines = []
 # for k, bhv_list in enumerate([('foraging_vs_exploration', 'other_patch_related'), ('separate_foraging', 'other_non_patch_related')]):
 #   line, = ax[k].bar([x + 0.5 for x in range(2)], 2 * [100], bottom=bottom, color='blue', lw=0,
