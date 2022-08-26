@@ -419,7 +419,7 @@ def get_transition_probability(mm, state_1, state_2, steps,
 def collapse_markov(mm, states_dict: dict, videos='12345', frac=None):
     """ Collapse markov matrix to states of interest. """
     collapsed_mm = np.zeros((len(states_dict.keys()), len(states_dict.keys())))
-    total_durations = [0 for b in BEHAVIORS]
+    total_durations = np.array([0 for b in BEHAVIORS])
     for n in videos:
         time, timeline = create_timeline(n)
         if frac is not None:
