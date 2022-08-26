@@ -610,7 +610,6 @@ def compare_with_dlc(videos = '1'):
                     bhv = 'other_non_patch_related'
                 else:
                     bhv = b
-                    print(bhv)
                 same_patch = 0
                 one_patch_one_out = 0
                 both_patch = 0
