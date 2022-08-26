@@ -65,19 +65,19 @@ plotdict = np.load('plot_behavior_vs_wheel_data.npz', allow_pickle=True)
 bars = plotdict['bars'].item()
 labels = plotdict['labels'].item()
 lines = []
-line, = ax[0].bar([k for k in range(2)], 2*[100], width=0.4,
+line = ax[0].bar([k for k in range(2)], 2*[100], width=0.4,
                   tick_label=['foraging\nvs exploration', 'other\n(patch related)'], align='center')
 lines.append(line)
 for i, color in enumerate(['green', 'red', 'yellow']):
-    line, = ax[0].bar([k for k in range(2)], [bars[b][i+1] for b in ['foraging_vs_exploration', 'other_patch_related']],
+    line = ax[0].bar([k for k in range(2)], [bars[b][i+1] for b in ['foraging_vs_exploration', 'other_patch_related']],
               width=0.4, bottom=[(i > 0)*bars[b][1] for b in ['foraging_vs_exploration', 'other_patch_related']],
               align='center', lw=0, edgecolor='black', color=color)
     lines.append(line)
-line, = ax[1].bar([k for k in range(2)], 2*[100], width=0.4,
+line = ax[1].bar([k for k in range(2)], 2*[100], width=0.4,
           tick_label=['separate\nforaging', 'other\n(non patch related)'], align='center')
 lines.append(line)
 for i, color in enumerate(['purple', 'yellow']):
-    line, = ax[1].bar([k for k in range(2)], [bars[b][i+2] for b in ['separate_foraging', 'other_non_patch_related']],
+    line = ax[1].bar([k for k in range(2)], [bars[b][i+2] for b in ['separate_foraging', 'other_non_patch_related']],
               bottom=[(i > 0) * bars[b][i+1] for b in ['separate_foraging', 'other_non_patch_related']],
               width=0.4, align='center', lw=0, edgecolor='black', color=color)
     lines.append(line)
