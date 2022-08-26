@@ -372,7 +372,7 @@ def get_markov_matrix(videos='12345', include_same=False, frac=None):
     for n in videos:
         time, timeline = create_timeline(n)
         if frac is not None:
-            tc = np.load('data_video_'+n+'.npz', allow_pickle=True)['tc'].item()['changetime']
+            tc = np.load('data_video_'+n+'.npz', allow_pickle=True)['threshold change'].item()['changetime']
             if frac == 'before':
                 timeline = timeline[time < tc]
             if frac == 'after':
@@ -423,7 +423,7 @@ def collapse_markov(mm, states_dict: dict, videos='12345', frac=None):
     for n in videos:
         time, timeline = create_timeline(n)
         if frac is not None:
-            tc = np.load('data_video_' + n + '.npz', allow_pickle=True)['tc'].item()['changetime']
+            tc = np.load('data_video_' + n + '.npz', allow_pickle=True)['threshold change'].item()['changetime']
             if frac == 'before':
                 timeline = timeline[time < tc]
             if frac == 'after':
