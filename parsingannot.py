@@ -230,11 +230,11 @@ def get_occupancy(pos):
         patch_radius = ROI_distance_quotient * distance_between_patches
         for i, frame in enumerate(pos.itertuples()):
             patch_occupied = [None, None]
-            for i, ind in enumerate(['1', '2']):
+            for k, ind in enumerate(['1', '2']):
                 x = frame.ind1_nose_x
                 y = frame.ind1_nose_y
                 if x and y:
-                    patch_occupied[i] = is_on_patch(rwx, rwy, lwx, lwy, x, y, patch_radius)
+                    patch_occupied[k] = is_on_patch(rwx, rwy, lwx, lwy, x, y, patch_radius)
             df = pd.concat([df, pd.DataFrame({'frame': i, 'patch_occupied_1': patch_occupied[0],
                                               'patch_occupied_2': patch_occupied[1]}, index=[0])], ignore_index=True)
     except Exception as err:
