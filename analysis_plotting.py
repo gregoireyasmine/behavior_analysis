@@ -602,28 +602,29 @@ def compare_with_dlc(videos = '1'):
         for i, t in enumerate(time):
             frames = occ_data[:, 0][(occ_data[:, 0] < 50*(t + timeline_bin)) * 50*(occ_data[:, 0]>= t)]
             b = timeline[i]
-            if b in ['direct_competition', 'close_by', 'travel_towards', 'travel_away']:
-                bhv = 'other_patch_related'
-            if b in ['attack', 'separate_exploration', 'close_investigation']:
-                bhv = 'other_non_patch_related'
-            else:
-                bhv = b
-            same_patch = 0
-            one_patch_one_out = 0
-            both_patch = 0
-            total = 0
-            for fr in frames:
-                total += 1
-                if occ_data[fr, 1] is not None or occ_data[fr, 0] is not None:
-                    if occ_data[fr, 1] == occ_data[fr, 0]:
-                        same_patch += 1
-                    elif occ_data[fr, 0] is None or occ_data[fr, 1] is None:
-                        one_patch_one_out += 1
-                    elif occ_data[fr, 0] != occ_data[fr, 1]:
-                        both_patch += 1
-                    else:
-                        print(occ_data[fr])
-            bars[bhv] += np.array([one_patch_one_out, same_patch, both_patch, total])
+            if b is not None:
+                if b in ['direct_competition', 'close_by', 'travel_towards', 'travel_away']:
+                    bhv = 'other_patch_related'
+                if b in ['attack', 'separate_exploration', 'close_investigation']:
+                    bhv = 'other_non_patch_related'
+                else:
+                    bhv = b
+                same_patch = 0
+                one_patch_one_out = 0
+                both_patch = 0
+                total = 0
+                for fr in frames:
+                    total += 1
+                    if occ_data[fr, 1] is not None or occ_data[fr, 0] is not None:
+                        if occ_data[fr, 1] == occ_data[fr, 0]:
+                            same_patch += 1
+                        elif occ_data[fr, 0] is None or occ_data[fr, 1] is None:
+                            one_patch_one_out += 1
+                        elif occ_data[fr, 0] != occ_data[fr, 1]:
+                            both_patch += 1
+                        else:
+                            print(occ_data[fr])
+                bars[bhv] += np.array([one_patch_one_out, same_patch, both_patch, total])
     for bhv in bars.keys():
         bars[bhv] /= bars[bhv][3]
     return bars
